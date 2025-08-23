@@ -103,7 +103,6 @@ const DesktopNavigation = () => {
     return cachedUserRole || 'user';
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isCollapsing, setIsCollapsing] = useState(false);
   const isInitialMount = useRef(true);
   const navItems = getNavItems(userRole);
 
@@ -198,27 +197,13 @@ const DesktopNavigation = () => {
   };
 
   const handleToggleSidebar = () => {
-    if (!isCollapsed) {
-      // Starting to collapse - instantly hide labels
-      setIsCollapsing(true);
-      // Start the actual collapse after a minimal delay to ensure instant fade
-      setTimeout(() => {
-        toggleSidebar();
-        // Reset collapsing state after animation completes
-        setTimeout(() => setIsCollapsing(false), 300);
-      }, 50);
-    } else {
-      // Expanding - normal behavior
-      toggleSidebar();
-    }
+    toggleSidebar();
   };
 
   return (
     <TooltipProvider delayDuration={0}>
       <div className={cn(
         "h-full flex flex-col bg-background border-r border-sidebar-border",
-        // Stage 1: Width transition - horizontal shrinking/expanding
-        "transition-[width] duration-250 ease-in-out",
         isCollapsed ? "w-12" : "w-64"
       )}>
       <div className={cn(
@@ -228,15 +213,13 @@ const DesktopNavigation = () => {
         {/* Header */}
         <div className={cn(
           "flex items-center",
-          // Stage 2: Items positioning - after width change completes
-          "transition-all duration-300 ease-in-out delay-200",
           isCollapsed ? "justify-center mb-0" : "gap-3 mb-8"
         )}>
                      {isCollapsed ? (
              <Tooltip>
                <TooltipTrigger asChild>
                  <div 
-                   className="bg-gradient-primary flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 w-8 h-8 rounded-md"
+                   className="bg-gradient-primary flex items-center justify-center cursor-pointer hover:scale-105 w-8 h-8 rounded-md"
                    onClick={handleToggleSidebar}
                  >
                    <GraduationCap className="w-6 h-6 text-primary-foreground" />
@@ -248,7 +231,7 @@ const DesktopNavigation = () => {
              </Tooltip>
            ) : (
              <div 
-               className="bg-gradient-primary flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 w-10 h-10 rounded-md"
+               className="bg-gradient-primary flex items-center justify-center cursor-pointer hover:scale-105 w-10 h-10 rounded-md"
                onClick={handleToggleSidebar}
              >
                <GraduationCap className="w-7 h-7 text-primary-foreground" />
@@ -256,9 +239,7 @@ const DesktopNavigation = () => {
            )}
           <div className={cn(
             "flex-1 flex items-center overflow-hidden",
-            // Stage 3: Content transition - after positioning settles, instant fade when collapsing
-            isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-250",
-            isCollapsed || isCollapsing ? "opacity-0 translate-x-2 w-0" : "opacity-100 translate-x-0"
+            isCollapsed ? "opacity-0 translate-x-2 w-0" : "opacity-100 translate-x-0"
           )}>
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-education-navy whitespace-nowrap">AMSUIP</h1>
@@ -274,14 +255,10 @@ const DesktopNavigation = () => {
           {/* MENU Label */}
           {!isCollapsed && (
             <div className={cn(
-              // Stage 2: Labels positioning - synchronized with header
-              "transition-all duration-300 ease-in-out delay-200",
               "px-3 pb-0"
             )}>
               <span className={cn(
                 "font-medium text-muted-foreground/60 uppercase tracking-wider block",
-                // Stage 3: Text styling - after positioning completes, instant fade when collapsing
-                isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-300",
                 "text-xs opacity-100 text-left"
               )}>
                 MENU
@@ -300,8 +277,6 @@ const DesktopNavigation = () => {
               <div
                 className={cn(
                   "flex items-center cursor-pointer group relative",
-                  // Stage 2: Item positioning - each with progressive delay
-                  "transition-all duration-300 ease-in-out",
                   isCollapsed 
                     ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                     : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -311,10 +286,6 @@ const DesktopNavigation = () => {
                       : "bg-gradient-primary shadow-glow text-white"
                     : "hover:bg-sidebar-accent/50 hover:text-foreground"
                 )}
-                style={{
-                  // Stage 2: Progressive delay for smooth upward movement
-                  transitionDelay: isCollapsed ? `${250 + index * 30}ms` : '0ms'
-                }}
               >
                   <Icon className={cn(
                     "flex-shrink-0",
@@ -324,9 +295,7 @@ const DesktopNavigation = () => {
                   
                   <span className={cn(
                     "font-medium whitespace-nowrap min-w-0",
-                    // Stage 3: Text content - fades smoothly after positioning, instant fade when collapsing
-                    isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-300",
-                    isCollapsed || isCollapsing
+                    isCollapsed
                       ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                       : "opacity-100 translate-x-0 flex-1 text-sm"
                   )}>
@@ -363,14 +332,10 @@ const DesktopNavigation = () => {
           {/* OTHER Label */}
           {!isCollapsed && (
             <div className={cn(
-              // Stage 2: Labels positioning - synchronized with menu items
-              "transition-all duration-300 ease-in-out delay-200",
               "px-3 py-0"
             )}>
               <span className={cn(
                 "font-medium text-muted-foreground/60 uppercase tracking-wider block",
-                // Stage 3: Text styling - after positioning completes, instant fade when collapsing
-                isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-300",
                 "text-xs opacity-100 text-left"
               )}>
                 OTHER
@@ -386,8 +351,6 @@ const DesktopNavigation = () => {
                   <div
                     className={cn(
                       "flex items-center cursor-pointer group relative",
-                      // Stage 2: Profile item positioning - after main menu items
-                      "transition-all duration-300 ease-in-out delay-400",
                       isCollapsed 
                         ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                         : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -405,9 +368,7 @@ const DesktopNavigation = () => {
                     )} />
                     <span className={cn(
                       "font-medium whitespace-nowrap min-w-0",
-                      // Stage 3: Profile text - fades after positioning, instant fade when collapsing
-                      isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-450",
-                      isCollapsed || isCollapsing
+                      isCollapsed
                         ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                         : "opacity-100 translate-x-0 flex-1 text-sm"
                     )}>
@@ -423,8 +384,6 @@ const DesktopNavigation = () => {
               <div
                 className={cn(
                   "flex items-center cursor-pointer group relative",
-                  // Stage 2: Profile item positioning - after main menu items
-                  "transition-all duration-300 ease-in-out delay-400",
                   isCollapsed 
                     ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                     : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -442,9 +401,7 @@ const DesktopNavigation = () => {
                 )} />
                 <span className={cn(
                   "font-medium whitespace-nowrap min-w-0",
-                  // Stage 3: Profile text - fades after positioning, instant fade when collapsing
-                  isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-450",
-                  isCollapsed || isCollapsing
+                  isCollapsed
                     ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                     : "opacity-100 translate-x-0 flex-1 text-sm"
                 )}>
@@ -461,8 +418,6 @@ const DesktopNavigation = () => {
                 <div
                   className={cn(
                     "flex items-center cursor-pointer group relative",
-                    // Stage 2: Logout item positioning - final item
-                    "transition-all duration-300 ease-in-out delay-450",
                     isCollapsed 
                       ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                       : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -477,9 +432,7 @@ const DesktopNavigation = () => {
                   )} />
                   <span className={cn(
                     "font-medium whitespace-nowrap min-w-0",
-                    // Stage 3: Logout text - fades after positioning, instant fade when collapsing
-                    isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-500",
-                    isCollapsed || isCollapsing
+                    isCollapsed
                       ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                       : "opacity-100 translate-x-0 flex-1 text-sm"
                   )}>
@@ -495,8 +448,6 @@ const DesktopNavigation = () => {
             <div
               className={cn(
                 "flex items-center cursor-pointer group relative",
-                // Stage 2: Logout item positioning - final item
-                "transition-all duration-300 ease-in-out delay-450",
                 isCollapsed 
                   ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                   : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -511,9 +462,7 @@ const DesktopNavigation = () => {
                 )} />
               <span className={cn(
                 "font-medium whitespace-nowrap min-w-0",
-                // Stage 3: Logout text - fades after positioning, instant fade when collapsing
-                isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-500",
-                isCollapsed || isCollapsing
+                isCollapsed
                   ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                   : "opacity-100 translate-x-0 flex-1 text-sm"
               )}>
@@ -648,10 +597,10 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   return (
     <div className="fixed inset-0 z-[60] md:hidden">
       <div 
-        className="fixed inset-0 bg-black/50 transition-opacity duration-200" 
+        className="fixed inset-0 bg-black/50" 
         onClick={onClose} 
       />
-      <div className="fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-200 ease-out">
+      <div className="fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
@@ -684,7 +633,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-3 h-10 text-sm transition-all duration-200 group relative overflow-hidden",
+                    "w-full justify-start gap-3 h-10 text-sm group relative overflow-hidden",
                     isActive 
                       ? "bg-gradient-primary shadow-glow text-white" 
                       : "hover:bg-[hsl(214,84%,56%)] hover:bg-opacity-10 hover:text-foreground"
@@ -709,7 +658,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           <Link to="/profile" onClick={onClose}>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 h-10 text-sm transition-all duration-200 group relative overflow-hidden hover:bg-[hsl(214,84%,56%)] hover:bg-opacity-10 hover:text-foreground"
+              className="w-full justify-start gap-3 h-10 text-sm group relative overflow-hidden hover:bg-[hsl(214,84%,56%)] hover:bg-opacity-10 hover:text-foreground"
               style={{ margin: '1px 0' }}
             >
               <User className="w-4.5 h-4.5" />
@@ -719,7 +668,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 h-10 text-sm transition-all duration-200 group relative overflow-hidden hover:bg-destructive/10 hover:text-destructive text-destructive/90"
+            className="w-full justify-start gap-3 h-10 text-sm group relative overflow-hidden hover:bg-destructive/10 hover:text-destructive text-destructive/90"
             style={{ margin: '1px 0' }}
             onClick={() => {
               handleLogoutClick();
