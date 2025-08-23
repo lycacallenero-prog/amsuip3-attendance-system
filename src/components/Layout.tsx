@@ -12,26 +12,20 @@ const Layout = ({ children }: LayoutProps) => {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className={cn(
+      "layout-container min-h-screen bg-background",
+      isCollapsed && "sidebar-collapsed"
+    )}>
       {/* Sidebar */}
       <div className={cn(
-        "fixed left-0 top-0 h-full z-40",
-        isDesktop ? "block" : "hidden",
-        // Collapsed thinner, expanded restored to original
-        isCollapsed ? "w-12" : "w-64"
+        "sidebar-fixed",
+        isDesktop ? "block" : "hidden"
       )}>
         <Navigation />
       </div>
       
       {/* Main Content */}
-      <main className={cn(
-        "flex-1 min-w-0",
-        isDesktop 
-          // Collapsed thinner, expanded restored to original
-          ? (isCollapsed ? 'ml-12' : 'ml-64') 
-          : 'ml-0',
-        "px-4 py-3 md:px-6 md:py-4"
-      )}>
+      <main className="main-content">
         {children}
       </main>
     </div>

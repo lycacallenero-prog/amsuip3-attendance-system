@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 
+// Get initial media query state to prevent layout shift
+const getInitialMediaQueryState = (query: string): boolean => {
+  if (typeof window === 'undefined') {
+    // For SSR, return a reasonable default based on the query
+    if (query.includes('min-width: 768px')) return true; // Assume desktop for md+ queries
+    return false;
+  }
+  return window.matchMedia(query).matches;
+};
+
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState<boolean>(false);
+  const [matches, setMatches] = useState<boolean>(() => getInitialMediaQueryState(query));
 
   useEffect(() => {
     // Check if window is defined (prevents SSR issues)
@@ -9,7 +19,7 @@ export function useMediaQuery(query: string): boolean {
 
     const mediaQuery = window.matchMedia(query);
     
-    // Update the state with the current value
+    // Update the state with the current value (in case it's different from initial)
     setMatches(mediaQuery.matches);
     
     // Create a callback function to handle changes

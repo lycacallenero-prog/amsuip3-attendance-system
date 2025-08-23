@@ -13,9 +13,72 @@ All colors MUST be HSL.
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Prevent initial layout shift */
+  html {
+    /* Ensure consistent viewport dimensions */
+    overflow-x: hidden;
+  }
+
   /* Smooth page transitions */
   body {
     overflow-x: hidden;
+    /* Prevent any potential layout shift during navigation */
+    min-height: 100vh;
+  }
+
+  /* Prevent layout shift by ensuring consistent dimensions from first render */
+  .layout-container {
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* Ensure sidebar has consistent width from first render */
+  .sidebar-fixed {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 40;
+  }
+
+  /* Ensure main content has proper margin from first render */
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Desktop layout - expanded sidebar */
+  @media (min-width: 768px) {
+    .main-content {
+      margin-left: 16rem; /* 64 * 0.25rem = 16rem (w-64) */
+      padding: 1rem 1.5rem;
+    }
+    
+    .sidebar-fixed {
+      display: block;
+      width: 16rem; /* w-64 */
+    }
+    
+    /* When sidebar is collapsed */
+    .sidebar-collapsed .main-content {
+      margin-left: 3rem; /* 12 * 0.25rem = 3rem (w-12) */
+    }
+    
+    .sidebar-collapsed .sidebar-fixed {
+      width: 3rem; /* w-12 */
+    }
+  }
+
+  /* Mobile layout */
+  @media (max-width: 767px) {
+    .main-content {
+      margin-left: 0;
+    }
+    
+    .sidebar-fixed {
+      display: none;
+    }
   }
 
   /* Skeleton loading state improvements */
