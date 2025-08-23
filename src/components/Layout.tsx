@@ -1,5 +1,4 @@
 import Navigation from "@/components/ui/navigation";
-import { useMediaQuery } from "../hooks/use-media-query";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { cn } from "@/lib/utils";
 
@@ -8,24 +7,20 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
   const { isCollapsed } = useSidebar();
 
   return (
     <div className={cn(
-      "layout-container min-h-screen bg-background",
+      "layout-wrapper",
       isCollapsed && "sidebar-collapsed"
     )}>
       {/* Sidebar */}
-      <div className={cn(
-        "sidebar-fixed",
-        isDesktop ? "block" : "hidden"
-      )}>
+      <div className="sidebar-desktop">
         <Navigation />
       </div>
       
       {/* Main Content */}
-      <main className="main-content">
+      <main className="flex-1 min-w-0 px-4 py-3 md:px-6 md:py-4">
         {children}
       </main>
     </div>

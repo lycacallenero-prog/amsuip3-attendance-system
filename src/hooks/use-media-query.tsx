@@ -7,10 +7,19 @@ const getInitialMediaQueryState = (query: string): boolean => {
     if (query.includes('min-width: 768px')) return true; // Assume desktop for md+ queries
     return false;
   }
-  return window.matchMedia(query).matches;
+  
+  // For client-side, immediately check the media query
+  try {
+    return window.matchMedia(query).matches;
+  } catch {
+    // Fallback to reasonable defaults
+    if (query.includes('min-width: 768px')) return true;
+    return false;
+  }
 };
 
 export function useMediaQuery(query: string): boolean {
+  // Initialize with the correct state immediately
   const [matches, setMatches] = useState<boolean>(() => getInitialMediaQueryState(query));
 
   useEffect(() => {
@@ -19,8 +28,10 @@ export function useMediaQuery(query: string): boolean {
 
     const mediaQuery = window.matchMedia(query);
     
-    // Update the state with the current value (in case it's different from initial)
-    setMatches(mediaQuery.matches);
+    // Only update if the state is different from initial
+    if (mediaQuery.matches !== matches) {
+      setMatches(mediaQuery.matches);
+    }
     
     // Create a callback function to handle changes
     const listener = (event: MediaQueryListEvent) => {
@@ -34,7 +45,7 @@ export function useMediaQuery(query: string): boolean {
     return () => {
       mediaQuery.removeEventListener('change', listener);
     };
-  }, [query]);
+  }, [query, matches]);
 
   return matches;
 }

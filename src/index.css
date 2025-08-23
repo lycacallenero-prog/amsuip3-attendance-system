@@ -26,57 +26,47 @@ All colors MUST be HSL.
     min-height: 100vh;
   }
 
-  /* Prevent layout shift by ensuring consistent dimensions from first render */
-  .layout-container {
+  /* Ensure layout is correct from first render */
+  .layout-wrapper {
     min-height: 100vh;
+    background-color: hsl(var(--background));
     display: flex;
   }
 
-  /* Ensure sidebar has consistent width from first render */
-  .sidebar-fixed {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    z-index: 40;
-  }
-
-  /* Ensure main content has proper margin from first render */
-  .main-content {
-    flex: 1;
-    min-width: 0;
-    padding: 0.75rem 1rem;
-  }
-
-  /* Desktop layout - expanded sidebar */
+  /* Desktop layout - always show sidebar with proper width */
   @media (min-width: 768px) {
-    .main-content {
-      margin-left: 16rem; /* 64 * 0.25rem = 16rem (w-64) */
-      padding: 1rem 1.5rem;
+    .layout-wrapper {
+      /* Ensure main content has proper margin from start */
+      padding-left: 16rem; /* w-64 */
     }
     
-    .sidebar-fixed {
-      display: block;
+    .sidebar-desktop {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
       width: 16rem; /* w-64 */
+      z-index: 40;
+      display: block;
     }
     
-    /* When sidebar is collapsed */
-    .sidebar-collapsed .main-content {
-      margin-left: 3rem; /* 12 * 0.25rem = 3rem (w-12) */
+    /* When collapsed, adjust layout */
+    .sidebar-collapsed .layout-wrapper {
+      padding-left: 3rem; /* w-12 */
     }
     
-    .sidebar-collapsed .sidebar-fixed {
+    .sidebar-collapsed .sidebar-desktop {
       width: 3rem; /* w-12 */
     }
   }
 
-  /* Mobile layout */
+  /* Mobile layout - hide sidebar */
   @media (max-width: 767px) {
-    .main-content {
-      margin-left: 0;
+    .layout-wrapper {
+      padding-left: 0;
     }
     
-    .sidebar-fixed {
+    .sidebar-desktop {
       display: none;
     }
   }
