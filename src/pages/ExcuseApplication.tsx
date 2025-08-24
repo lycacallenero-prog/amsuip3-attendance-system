@@ -268,31 +268,59 @@ const ExcuseApplicationContent = () => {
     try {
       console.log('Deleting excuse with ID:', id, 'Type:', typeof id);
       
-      // Convert ID to string for consistency
-      const idString = id.toString();
-      
-      // First, let's verify the record exists
-      const { data: existingRecord, error: fetchError } = await supabase
+      // First, let's check what the actual ID looks like in the database
+      const { data: checkData, error: checkError } = await supabase
         .from('excuse_applications')
         .select('id')
-        .eq('id', idString)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching record to delete:', fetchError);
-        throw fetchError;
-      }
-
-      console.log('Found record to delete:', existingRecord);
+        .limit(1);
       
-      const { error } = await supabase
+      if (checkError) {
+        console.error('Error checking ID format:', checkError);
+      } else {
+        console.log('Sample ID from database:', checkData?.[0]?.id, 'Type:', typeof checkData?.[0]?.id);
+      }
+      
+      // Try the delete operation
+      const { error, count } = await supabase
         .from('excuse_applications')
         .delete()
-        .eq('id', idString);
+        .eq('id', id);
+
+      console.log('Delete result - Error:', error, 'Count:', count);
+      
+      // Also try to fetch the record to see if it exists
+      const { data: checkRecord, error: checkRecordError } = await supabase
+        .from('excuse_applications')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      console.log('Record check - Data:', checkRecord, 'Error:', checkRecordError);
 
       if (error) {
         console.error('Supabase delete error:', error);
         throw error;
+      }
+
+      if (count === 0) {
+        console.log('No records were deleted, trying alternative approach...');
+        
+        // Try alternative delete approach
+        const { error: altError, count: altCount } = await supabase
+          .from('excuse_applications')
+          .delete()
+          .eq('id', parseInt(id.toString()));
+        
+        console.log('Alternative delete result - Error:', altError, 'Count:', altCount);
+        
+        if (altCount === 0) {
+          toast({
+            title: "Warning",
+            description: "No record found to delete",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       console.log('Delete successful, refreshing list...');
