@@ -722,14 +722,14 @@ const TakeAttendanceSession = () => {
                         <Button 
                           onClick={handleStopCamera}
                           variant="outline"
-                          className="w-24 py-2 h-auto text-base hover:bg-transparent hover:text-inherit active:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="flex-shrink-0 px-3 sm:px-4 py-2 h-auto text-base hover:bg-transparent hover:text-inherit active:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                           size="lg"
                         >
                           <div className="relative w-5 h-5 mr-2">
                             <Square className="w-4 h-4 text-red-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                             <div className="w-3 h-3 bg-red-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                           </div>
-                          Stop
+                          <span className="hidden sm:inline">Stop</span>
                         </Button>
                       </div>
                     ) : capturedImage ? (

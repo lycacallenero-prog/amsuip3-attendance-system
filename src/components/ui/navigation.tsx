@@ -575,12 +575,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      // Force a reflow to ensure the element starts in closed position
-      requestAnimationFrame(() => {
-        setIsAnimating(true);
-      });
     } else {
-      setIsAnimating(false);
       // Delay hiding to allow animation to complete
       const timer = setTimeout(() => {
         setIsVisible(false);
@@ -687,9 +682,14 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       {/* Drawer */}
       <div 
         className={cn(
-          "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out",
-          isAnimating && isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto",
+          isOpen ? "animate-slide-in" : "animate-slide-out"
         )}
+        style={{
+          animationDuration: '300ms',
+          animationTimingFunction: 'ease-in-out',
+          animationFillMode: 'forwards'
+        }}
       >
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
