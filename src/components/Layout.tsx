@@ -2,6 +2,7 @@ import Navigation from "@/components/ui/navigation";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,15 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { isCollapsed } = useSidebar();
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Prevent transition on initial load to avoid sliding effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -26,6 +36,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main Content */}
       <main className={cn(
         "flex-1 min-w-0",
+        isInitialized && "transition-[margin-left] duration-300 ease-in-out",
         isDesktop 
           ? (isCollapsed ? 'ml-12' : 'ml-64') 
           : 'ml-0',
