@@ -769,7 +769,11 @@ const Navigation = () => {
   };
 
   if (isDesktop) {
-    return <DesktopNavigation />;
+    return (
+      <div className="fixed left-0 top-0 h-full z-40">
+        <DesktopNavigation />
+      </div>
+    );
   }
 
   return (

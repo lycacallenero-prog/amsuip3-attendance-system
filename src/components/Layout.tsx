@@ -25,16 +25,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <div className={cn(
-        "fixed left-0 top-0 h-full z-40",
-        "transition-[width] duration-250 ease-in-out", // Match navigation timing
-        isDesktop ? "block" : "hidden",
-        // Collapsed thinner, expanded restored to original
-        isCollapsed ? "w-12" : "w-64"
-      )}>
-        <Navigation />
-      </div>
+      {/* Navigation Component (handles both desktop and mobile) */}
+      <Navigation />
       
       {/* Main Content */}
       <main className={cn(
