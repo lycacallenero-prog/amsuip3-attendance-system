@@ -526,18 +526,26 @@ const DesktopNavigation = () => {
       
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
               Are you sure you want to log out? You will need to sign in again to access your account.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+          <DialogFooter className="flex gap-2 sm:gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowLogoutConfirm(false)}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmLogout}>
+            <Button 
+              variant="destructive" 
+              onClick={confirmLogout}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               Log Out
             </Button>
           </DialogFooter>
@@ -671,10 +679,12 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       />
       
       {/* Drawer */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <div 
+        className={cn(
+          "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
@@ -744,10 +754,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             variant="ghost"
             className="w-full justify-start gap-3 h-10 text-sm transition-all duration-200 group relative overflow-hidden hover:bg-destructive/10 hover:text-destructive text-destructive/90"
             style={{ margin: '1px 0' }}
-            onClick={() => {
-              handleLogoutClick();
-              onClose();
-            }}
+            onClick={handleLogoutClick}
           >
             <LogOut className="w-4.5 h-4.5" />
             Log Out
@@ -757,18 +764,26 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
               Are you sure you want to log out? You will need to sign in again to access your account.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+          <DialogFooter className="flex gap-2 sm:gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowLogoutConfirm(false)}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmLogout}>
+            <Button 
+              variant="destructive" 
+              onClick={confirmLogout}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               Log Out
             </Button>
           </DialogFooter>
