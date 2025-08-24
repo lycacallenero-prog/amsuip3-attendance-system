@@ -236,110 +236,58 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total Students Widget */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/20 to-blue-300/20 rounded-full -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-300"></div>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6 relative z-10">
-            <CardTitle className="text-sm font-semibold text-blue-800">Total Students</CardTitle>
-            <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
+            <CardTitle className="text-sm font-medium text-gray-700">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent className="pt-0 px-6 pb-6 relative z-10">
-            <div className="flex items-baseline space-x-2">
-              <div className="text-3xl font-bold text-blue-900">
-                {loading ? '' : totalStudents.toLocaleString()}
-              </div>
-              <div className="flex items-center text-green-600 text-sm font-medium">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +12%
-              </div>
+          <CardContent className="pt-1 px-6 pb-4">
+            <div className="text-2xl font-bold text-gray-900">
+              {loading ? '' : totalStudents.toLocaleString()}
             </div>
-            <p className="text-sm text-blue-700/70 mt-2 font-medium">
+            <p className="text-xs text-gray-500 mt-1">
               Enrolled students
             </p>
-            <div className="mt-3 w-full bg-blue-200/50 rounded-full h-1.5">
-              <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '85%' }}></div>
-            </div>
           </CardContent>
         </Card>
         
-        {/* Today's Sessions Widget */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/20 to-purple-300/20 rounded-full -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-300"></div>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6 relative z-10">
-            <CardTitle className="text-sm font-semibold text-purple-800">Today's Sessions</CardTitle>
-            <div className="p-2 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
-              <CalendarDays className="h-5 w-5 text-purple-600" />
-            </div>
+        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
+            <CardTitle className="text-sm font-medium text-gray-700">Today's Sessions</CardTitle>
+            <CalendarDays className="h-4 w-4 text-purple-600" />
           </CardHeader>
-          <CardContent className="pt-0 px-6 pb-6 relative z-10">
-            <div className="flex items-baseline space-x-2">
-              <div className="text-3xl font-bold text-purple-900">8</div>
-              <div className="flex items-center text-green-600 text-sm font-medium">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +2
-              </div>
-            </div>
-            <p className="text-sm text-purple-700/70 mt-2 font-medium">
-              from yesterday
+          <CardContent className="pt-1 px-6 pb-4">
+            <div className="text-2xl font-bold text-gray-900">8</div>
+            <p className="text-xs text-gray-500 mt-1">
+              +2 from yesterday
             </p>
-            <div className="mt-3 w-full bg-purple-200/50 rounded-full h-1.5">
-              <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '75%' }}></div>
-            </div>
           </CardContent>
         </Card>
         
-        {/* Attendance Rate Widget */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-200/20 to-green-300/20 rounded-full -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-300"></div>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6 relative z-10">
-            <CardTitle className="text-sm font-semibold text-green-800">Attendance Rate</CardTitle>
-            <div className="p-2 bg-green-500/10 rounded-lg group-hover:bg-green-500/20 transition-colors">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-            </div>
+        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
+            <CardTitle className="text-sm font-medium text-gray-700">Attendance Rate</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
           </CardHeader>
-          <CardContent className="pt-0 px-6 pb-6 relative z-10">
-            <div className="flex items-baseline space-x-2">
-              <div className="text-3xl font-bold text-green-900">94.2%</div>
-              <div className="flex items-center text-green-600 text-sm font-medium">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +1.2%
-              </div>
-            </div>
-            <p className="text-sm text-green-700/70 mt-2 font-medium">
-              from last week
+          <CardContent className="pt-1 px-6 pb-4">
+            <div className="text-2xl font-bold text-gray-900">94.2%</div>
+            <p className="text-xs text-gray-500 mt-1">
+              +1.2% from last week
             </p>
-            <div className="mt-3 w-full bg-green-200/50 rounded-full h-1.5">
-              <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '94%' }}></div>
-            </div>
           </CardContent>
         </Card>
         
-        {/* Active Classes Widget */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100 border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/20 to-orange-300/20 rounded-full -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-300"></div>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6 relative z-10">
-            <CardTitle className="text-sm font-semibold text-orange-800">Active Classes</CardTitle>
-            <div className="p-2 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20 transition-colors">
-              <BookOpen className="h-5 w-5 text-orange-600" />
-            </div>
+        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
+            <CardTitle className="text-sm font-medium text-gray-700">Active Classes</CardTitle>
+            <BookOpen className="h-4 w-4 text-orange-600" />
           </CardHeader>
-          <CardContent className="pt-0 px-6 pb-6 relative z-10">
-            <div className="flex items-baseline space-x-2">
-              <div className="text-3xl font-bold text-orange-900">24</div>
-              <div className="flex items-center text-green-600 text-sm font-medium">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                +3
-              </div>
-            </div>
-            <p className="text-sm text-orange-700/70 mt-2 font-medium">
+          <CardContent className="pt-1 px-6 pb-4">
+            <div className="text-2xl font-bold text-gray-900">24</div>
+            <p className="text-xs text-gray-500 mt-1">
               Across all programs
             </p>
-            <div className="mt-3 w-full bg-orange-200/50 rounded-full h-1.5">
-              <div className="bg-orange-500 h-1.5 rounded-full" style={{ width: '80%' }}></div>
-            </div>
           </CardContent>
         </Card>
       </div>
