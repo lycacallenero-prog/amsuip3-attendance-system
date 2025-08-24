@@ -416,7 +416,7 @@ export default function SessionStudents() {
 
         {/* Session Details - Program Info with Students List */}
         <Card className="border-0 shadow-sm overflow-hidden w-full">
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             {/* Date & Time */}
             <div className="text-center space-y-0.5 mb-4">
               <h2 className="text-lg font-semibold text-foreground">
@@ -524,28 +524,28 @@ export default function SessionStudents() {
                     <table className="min-w-full divide-y divide-gray-200 text-sm">
                       <thead className="bg-gray-50">
                         <tr className="text-xs text-gray-500">
-                          <th scope="col" className="px-3 py-2 text-left font-medium">Student</th>
-                          <th scope="col" className="px-3 py-2 text-left font-medium">ID</th>
-                          <th scope="col" className="px-3 py-2 text-left font-medium">Program</th>
-                          <th scope="col" className="px-3 py-2 text-left font-medium">Year & Section</th>
+                          <th scope="col" className="px-6 py-2 text-left font-medium">Student</th>
+                          <th scope="col" className="px-6 py-2 text-left font-medium">ID</th>
+                          <th scope="col" className="px-6 py-2 text-left font-medium">Program</th>
+                          <th scope="col" className="px-6 py-2 text-left font-medium">Year & Section</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {paginatedStudents.map((student) => {
                           return (
                             <tr key={student.id} className="hover:bg-gray-50">
-                              <td className="px-3 py-2 whitespace-nowrap">
+                              <td className="px-6 py-2 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
                                   {student.full_name}
                                 </div>
                               </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-500 text-sm">
+                              <td className="px-6 py-2 whitespace-nowrap text-gray-500 text-sm">
                                 {student.student_id}
                               </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
+                              <td className="px-6 py-2 whitespace-nowrap">
                                 <div className="text-sm text-gray-500 truncate max-w-[120px]">{student.program}</div>
                               </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
+                              <td className="px-6 py-2 whitespace-nowrap">
                                 <div className="text-sm text-gray-500">
                                   {student.year} • {student.section}
                                 </div>
