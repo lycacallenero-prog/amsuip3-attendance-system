@@ -5,9 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Calendar, Shield, Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { User, Mail, Calendar, Shield, Edit, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface UserProfile {
   id: string;
@@ -21,6 +25,22 @@ const Profile = () => {
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Edit Profile Dialog State
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  
+  // Change Password Dialog State
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -44,6 +64,90 @@ const Profile = () => {
 
     fetchUserProfile();
   }, [user]);
+
+  // Handle Edit Profile
+  const handleEditProfile = () => {
+    setEditFirstName(userProfile?.first_name || '');
+    setEditLastName(userProfile?.last_name || '');
+    setEditProfileOpen(true);
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!user || !userProfile) return;
+
+    setIsUpdatingProfile(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: editFirstName.trim(),
+          last_name: editLastName.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setUserProfile(prev => prev ? {
+        ...prev,
+        first_name: editFirstName.trim(),
+        last_name: editLastName.trim(),
+        updated_at: new Date().toISOString()
+      } : null);
+
+      toast.success('Profile updated successfully!');
+      setEditProfileOpen(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  // Handle Change Password
+  const handleChangePassword = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setChangePasswordOpen(true);
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!user) return;
+
+    // Validation
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success('Password changed successfully!');
+      setChangePasswordOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Failed to change password. Please try again.');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -186,12 +290,12 @@ const Profile = () => {
 
                          {/* Account Actions */}
              <div className="flex gap-3 justify-center">
-               <Button variant="outline" size="sm">
+               <Button variant="outline" size="sm" onClick={handleEditProfile}>
                  <Edit className="h-4 w-4 mr-2" />
                  Edit Profile
                </Button>
                
-               <Button variant="outline" size="sm">
+               <Button variant="outline" size="sm" onClick={handleChangePassword}>
                  <Shield className="h-4 w-4 mr-2" />
                  Change Password
                </Button>
@@ -199,6 +303,118 @@ const Profile = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your first name and last name
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={editFirstName}
+                onChange={(e) => setEditFirstName(e.target.value)}
+                placeholder="Enter your first name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                value={editLastName}
+                onChange={(e) => setEditLastName(e.target.value)}
+                placeholder="Enter your last name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProfileOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateProfile} disabled={isUpdatingProfile}>
+              {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter your new password
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChangePasswordOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePassword} disabled={isChangingPassword}>
+              {isChangingPassword ? 'Changing...' : 'Change Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
