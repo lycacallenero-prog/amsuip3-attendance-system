@@ -95,11 +95,59 @@ const Dashboard = () => {
   
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
 
+  // Fetch recent attendance sessions
+  const fetchRecentSessions = useCallback(async () => {
+    try {
+      // For now, using mock data. In a real app, this would fetch from attendance_records table
+      const mockSessions: RecentSession[] = [
+        {
+          id: '1',
+          course: 'CS 101 - Introduction to Programming',
+          students: 45,
+          time: '9:00 AM - 10:30 AM',
+          timeAgo: '2 min ago',
+          status: 'completed',
+          attendanceRate: 93
+        },
+        {
+          id: '2',
+          course: 'MATH 201 - Calculus II',
+          students: 38,
+          time: '11:00 AM - 12:30 PM',
+          timeAgo: '15 min ago',
+          status: 'ongoing',
+          attendanceRate: 87
+        },
+        {
+          id: '3',
+          course: 'ENG 101 - English Composition',
+          students: 42,
+          time: '2:00 PM - 3:30 PM',
+          timeAgo: '1 hour ago',
+          status: 'upcoming'
+        },
+        {
+          id: '4',
+          course: 'PHY 101 - Physics Fundamentals',
+          students: 35,
+          time: '4:00 PM - 5:30 PM',
+          timeAgo: '3 hours ago',
+          status: 'completed',
+          attendanceRate: 91
+        }
+      ];
+      
+      setRecentSessions(mockSessions);
+    } catch (error) {
+      console.error('Error fetching recent sessions:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUserProfile();
     fetchTotalStudents();
     fetchRecentSessions();
-  }, [user, fetchRecentSessions]);
+  }, [user]);
 
   const fetchUserProfile = async () => {
     // If we have cached role for the same user, don't refetch
@@ -177,54 +225,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
-  // Fetch recent attendance sessions
-  const fetchRecentSessions = useCallback(async () => {
-    try {
-      // For now, using mock data. In a real app, this would fetch from attendance_records table
-      const mockSessions: RecentSession[] = [
-        {
-          id: '1',
-          course: 'CS 101 - Introduction to Programming',
-          students: 45,
-          time: '9:00 AM - 10:30 AM',
-          timeAgo: '2 min ago',
-          status: 'completed',
-          attendanceRate: 93
-        },
-        {
-          id: '2',
-          course: 'MATH 201 - Calculus II',
-          students: 38,
-          time: '11:00 AM - 12:30 PM',
-          timeAgo: '15 min ago',
-          status: 'ongoing',
-          attendanceRate: 87
-        },
-        {
-          id: '3',
-          course: 'ENG 101 - English Composition',
-          students: 42,
-          time: '2:00 PM - 3:30 PM',
-          timeAgo: '1 hour ago',
-          status: 'upcoming'
-        },
-        {
-          id: '4',
-          course: 'PHY 101 - Physics Fundamentals',
-          students: 35,
-          time: '4:00 PM - 5:30 PM',
-          timeAgo: '3 hours ago',
-          status: 'completed',
-          attendanceRate: 91
-        }
-      ];
-      
-      setRecentSessions(mockSessions);
-    } catch (error) {
-      console.error('Error fetching recent sessions:', error);
-    }
-  }, []);
 
   // Handle session click
   const handleSessionClick = (session: RecentSession) => {
