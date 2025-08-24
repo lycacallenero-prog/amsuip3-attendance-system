@@ -558,8 +558,22 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     return cachedUserRole || 'user';
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const isInitialMount = useRef(true);
   const navItems = getNavItems(userRole);
+
+  // Handle animation states
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+    } else {
+      // Delay hiding to allow animation to complete
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 300); // Match transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -643,15 +657,24 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     await handleLogout();
   };
   
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-[60] md:hidden">
+      {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 transition-opacity duration-200" 
+        className={cn(
+          "fixed inset-0 bg-black/50 transition-opacity duration-300 ease-in-out",
+          isOpen ? "opacity-100" : "opacity-0"
+        )}
         onClick={onClose} 
       />
-      <div className="fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-200 ease-out">
+      
+      {/* Drawer */}
+      <div className={cn(
+        "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
@@ -768,8 +791,7 @@ const Navigation = () => {
     setIsMobileOpen(false);
   };
 
-  // Debug: Log the current state
-  console.log('Navigation - isDesktop:', isDesktop);
+
 
   if (isDesktop) {
     return (

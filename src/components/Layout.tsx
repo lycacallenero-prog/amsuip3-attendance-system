@@ -14,8 +14,7 @@ const Layout = ({ children }: LayoutProps) => {
   const { isCollapsed } = useSidebar();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Debug: Log the current state
-  console.log('Layout - isDesktop:', isDesktop, 'isCollapsed:', isCollapsed);
+
 
   useEffect(() => {
     // Prevent content flickering during route transitions
