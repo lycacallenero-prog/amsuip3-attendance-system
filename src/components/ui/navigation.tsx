@@ -526,7 +526,7 @@ const DesktopNavigation = () => {
       
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="!max-w-md w-[90vw] mx-auto">
+        <DialogContent className="!max-w-md w-[90vw] mx-auto rounded-lg">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
@@ -567,6 +567,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const isInitialMount = useRef(true);
   const navItems = getNavItems(userRole);
 
@@ -574,12 +575,12 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      // Force a small delay to ensure the element renders in closed position first
-      const timer = setTimeout(() => {
-        // This ensures the animation triggers properly
-      }, 10);
-      return () => clearTimeout(timer);
+      // Force a reflow to ensure the element starts in closed position
+      requestAnimationFrame(() => {
+        setIsAnimating(true);
+      });
     } else {
+      setIsAnimating(false);
       // Delay hiding to allow animation to complete
       const timer = setTimeout(() => {
         setIsVisible(false);
@@ -687,12 +688,8 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       <div 
         className={cn(
           "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isAnimating && isOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{
-          // Ensure the element always starts in the correct position for animation
-          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)'
-        }}
       >
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
@@ -773,7 +770,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="!max-w-md w-[90vw] mx-auto">
+        <DialogContent className="!max-w-md w-[90vw] mx-auto rounded-lg">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
