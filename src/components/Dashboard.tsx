@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, Users, BookOpen, Clock, TrendingUp, CheckCircle2, Calendar, BarChart3, LineChart } from "lucide-react";
+import { CalendarDays, Users, BookOpen, TrendingUp, CheckCircle2, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
@@ -164,9 +163,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleViewCalendar = () => {
-    navigate('/schedule');
-  };
+
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -217,100 +214,100 @@ const Dashboard = () => {
   }, [chartData]);
 
   return (
-    <div className="flex-1 space-y-4 px-6 py-4 opacity-100 transition-opacity duration-300">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight text-education-navy">{getDashboardTitle()}</h2>
-          <p className="text-sm text-muted-foreground">
-            {getGreeting()}! Here's your attendance overview.
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button 
-            onClick={handleViewCalendar}
-            className="bg-gradient-primary shadow-glow h-9 px-4"
-          >
-            <Calendar className="mr-2 h-4 w-4" />
-            View Calendar
-          </Button>
-        </div>
+    <div className="flex-1 space-y-6 px-6 py-6 opacity-100 transition-opacity duration-300">
+      {/* Header Section */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-gray-900">{getDashboardTitle()}</h1>
+        <p className="text-lg text-gray-600">
+          {getGreeting()}! Here's your attendance overview.
+        </p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
-            <CardTitle className="text-sm font-medium text-gray-700">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+      {/* Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Students</CardTitle>
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Users className="h-4 w-4 text-blue-600" />
+            </div>
           </CardHeader>
-          <CardContent className="pt-1 px-6 pb-4">
-            <div className="text-2xl font-bold text-gray-900">
+          <CardContent className="pt-0 px-6 pb-6">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               {loading ? '' : totalStudents.toLocaleString()}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm text-gray-500">
               Enrolled students
             </p>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
-            <CardTitle className="text-sm font-medium text-gray-700">Today's Sessions</CardTitle>
-            <CalendarDays className="h-4 w-4 text-purple-600" />
+        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-600">Today's Sessions</CardTitle>
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <CalendarDays className="h-4 w-4 text-purple-600" />
+            </div>
           </CardHeader>
-          <CardContent className="pt-1 px-6 pb-4">
-            <div className="text-2xl font-bold text-gray-900">8</div>
-            <p className="text-xs text-gray-500 mt-1">
+          <CardContent className="pt-0 px-6 pb-6">
+            <div className="text-3xl font-bold text-gray-900 mb-1">8</div>
+            <p className="text-sm text-gray-500">
               +2 from yesterday
             </p>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
-            <CardTitle className="text-sm font-medium text-gray-700">Attendance Rate</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-600">Attendance Rate</CardTitle>
+            <div className="p-2 bg-green-50 rounded-lg">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            </div>
           </CardHeader>
-          <CardContent className="pt-1 px-6 pb-4">
-            <div className="text-2xl font-bold text-gray-900">94.2%</div>
-            <p className="text-xs text-gray-500 mt-1">
+          <CardContent className="pt-0 px-6 pb-6">
+            <div className="text-3xl font-bold text-gray-900 mb-1">94.2%</div>
+            <p className="text-sm text-gray-500">
               +1.2% from last week
             </p>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-4">
-            <CardTitle className="text-sm font-medium text-gray-700">Active Classes</CardTitle>
-            <BookOpen className="h-4 w-4 text-orange-600" />
+        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
+            <CardTitle className="text-sm font-medium text-gray-600">Active Classes</CardTitle>
+            <div className="p-2 bg-orange-50 rounded-lg">
+              <BookOpen className="h-4 w-4 text-orange-600" />
+            </div>
           </CardHeader>
-          <CardContent className="pt-1 px-6 pb-4">
-            <div className="text-2xl font-bold text-gray-900">24</div>
-            <p className="text-xs text-gray-500 mt-1">
+          <CardContent className="pt-0 px-6 pb-6">
+            <div className="text-3xl font-bold text-gray-900 mb-1">24</div>
+            <p className="text-sm text-gray-500">
               Across all programs
             </p>
           </CardContent>
         </Card>
       </div>
       
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 bg-gradient-card border-0 shadow-card">
-          <CardHeader className="pb-3">
+      {/* Chart Section */}
+      <div className="grid gap-6">
+        <Card className="bg-white border-0 shadow-sm">
+          <CardHeader className="pb-4">
             <div className="flex justify-between items-start">
-              <div className="pt-1">
-                <CardTitle className="text-education-navy">Attendance Overview</CardTitle>
-                <CardDescription>
+              <div>
+                <CardTitle className="text-xl font-semibold text-gray-900">Attendance Overview</CardTitle>
+                <CardDescription className="text-gray-600 mt-1">
                   {timePeriod === 'daily' ? 'Daily' : timePeriod === 'weekly' ? 'Weekly' : 'Monthly'} attendance trends
                 </CardDescription>
               </div>
-              <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
                 {(['daily', 'weekly', 'monthly'] as const).map((period) => (
                   <button
                     key={period}
                     onClick={() => setTimePeriod(period)}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`px-4 py-2 text-sm rounded-md transition-colors font-medium ${
                       timePeriod === period
-                        ? 'bg-white text-education-navy shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     {period.charAt(0).toUpperCase() + period.slice(1)}
@@ -398,105 +395,6 @@ const Dashboard = () => {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-3 bg-gradient-card border-0 shadow-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-education-navy">Recent Activity</CardTitle>
-            <CardDescription>
-              Latest attendance activities and updates
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                <CheckCircle2 className="mr-3 h-4 w-4 text-green-500" />
-                <div className="flex-1 space-y-0.5">
-                  <p className="text-sm font-medium leading-none">
-                    CS 101 - Introduction to Programming
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Attendance taken for 45 students
-                  </p>
-                </div>
-                <div className="text-xs text-muted-foreground">2 min ago</div>
-              </div>
-              
-              <div className="flex items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                <Clock className="mr-3 h-4 w-4 text-orange-500" />
-                <div className="flex-1 space-y-0.5">
-                  <p className="text-sm font-medium leading-none">
-                    MATH 201 - Calculus II
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Session starting in 15 minutes
-                  </p>
-                </div>
-                <div className="text-xs text-muted-foreground">upcoming</div>
-              </div>
-              
-              <div className="flex items-center p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                <BarChart3 className="mr-3 h-4 w-4 text-blue-500" />
-                <div className="flex-1 space-y-0.5">
-                  <p className="text-sm font-medium leading-none">
-                    Weekly Report Generated
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Attendance summary for Nov 11-17
-                  </p>
-                </div>
-                <div className="text-xs text-muted-foreground">1 hour ago</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="col-span-3 bg-gradient-card border-0 shadow-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-education-navy">Quick Actions</CardTitle>
-            <CardDescription>
-              Common tasks and shortcuts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Button 
-                className="w-full justify-start h-9 hover:bg-muted hover:text-foreground transition-colors"
-                variant="outline"
-                onClick={() => navigate('/take-attendance')}
-              >
-                <Clock className="mr-2 h-4 w-4" />
-                Take Attendance
-              </Button>
-              
-              <Button 
-                className="w-full justify-start h-9 hover:bg-muted hover:text-foreground transition-colors"
-                variant="outline"
-                onClick={() => navigate('/students')}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Manage Students
-              </Button>
-              
-              <Button 
-                className="w-full justify-start h-9 hover:bg-muted hover:text-foreground transition-colors"
-                variant="outline"
-                onClick={() => navigate('/schedule')}
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                View Schedule
-              </Button>
-              
-              <Button 
-                className="w-full justify-start h-9 hover:bg-muted hover:text-foreground transition-colors"
-                variant="outline"
-                onClick={() => navigate('/records')}
-              >
-                <BarChart3 className="mr-2 h-4 w-4" />
-                View Reports
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
