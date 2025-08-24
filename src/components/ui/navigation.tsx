@@ -99,8 +99,16 @@ const DesktopNavigation = () => {
   const { user, signOut } = useAuth();
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [userRole, setUserRole] = useState<string>(() => {
-    // Initialize with cached role if available
-    return cachedUserRole || 'user';
+    // Initialize with cached role if available, otherwise use a reasonable default
+    if (cachedUserRole && cachedUserId === user?.id) {
+      return cachedUserRole;
+    }
+    // If no cached role but we have a user, assume 'user' role to prevent flash
+    if (user?.id) {
+      return 'user';
+    }
+    // Default fallback
+    return 'user';
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const isInitialMount = useRef(true);
@@ -159,24 +167,7 @@ const DesktopNavigation = () => {
     }
   }, [user?.id]); // Only depend on user ID, not the full user object
 
-  const getPanelLabel = () => {
-    switch (userRole) {
-      case 'admin':
-        return 'Admin Panel';
-      case 'instructor':
-        return 'Instructor Panel';
-      default:
-        return 'User Panel';
-    }
-  };
 
-  const shouldShowItem = (item: typeof navItems[0]) => {
-    // Show admin-only items only for admin users
-    if (item.href === '/students' || item.href === '/academic-year') {
-      return userRole === 'admin';
-    }
-    return true; // Show all other items
-  };
 
   const handleLogout = async () => {
     try {
@@ -243,7 +234,9 @@ const DesktopNavigation = () => {
           )}>
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-education-navy whitespace-nowrap">AMSUIP</h1>
-              <p className="text-sm text-muted-foreground whitespace-nowrap">{getPanelLabel()}</p>
+              <p className="text-sm text-muted-foreground whitespace-nowrap">
+                {userRole === 'admin' ? 'Admin Panel' : userRole === 'instructor' ? 'Instructor Panel' : 'User Panel'}
+              </p>
             </div>
           </div>
         </div>
@@ -266,7 +259,14 @@ const DesktopNavigation = () => {
             </div>
           )}
           
-          {navItems.filter(item => item.href !== '/students' && item.href !== '/academic-year' || userRole === 'admin').map((item, index) => {
+          {navItems.filter(item => {
+            // Always show non-admin items
+            if (item.href !== '/students' && item.href !== '/academic-year') {
+              return true;
+            }
+            // Show admin items only for admin users
+            return userRole === 'admin';
+          }).map((item, index) => {
             
             const isActive = item.isActive 
               ? item.isActive(location.pathname) 
@@ -563,16 +563,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     }
   }, [user?.id]); // Only depend on user ID, not the full user object
 
-  const getPanelLabel = () => {
-    switch (userRole) {
-      case 'admin':
-        return 'Admin Panel';
-      case 'instructor':
-        return 'Instructor Panel';
-      default:
-        return 'User Panel';
-    }
-  };
+
 
   const handleLogout = async () => {
     try {
@@ -608,7 +599,9 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             </div>
             <div>
               <h1 className="text-lg font-bold text-education-navy">AMSUIP</h1>
-              <p className="text-sm text-muted-foreground">{getPanelLabel()}</p>
+              <p className="text-sm text-muted-foreground">
+                {userRole === 'admin' ? 'Admin Panel' : userRole === 'instructor' ? 'Instructor Panel' : 'User Panel'}
+              </p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -622,7 +615,14 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
               MENU
             </span>
           </div>
-          {navItems.map((item) => {
+          {navItems.filter(item => {
+            // Always show non-admin items
+            if (item.href !== '/students' && item.href !== '/academic-year') {
+              return true;
+            }
+            // Show admin items only for admin users
+            return userRole === 'admin';
+          }).map((item) => {
             const isActive = item.isActive 
               ? item.isActive(location.pathname) 
               : location.pathname === item.href;
