@@ -80,7 +80,7 @@ const ExcuseApplicationContent = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | number | null>(null);
 
   useEffect(() => {
     fetchExcuses();
@@ -265,14 +265,31 @@ const ExcuseApplicationContent = () => {
     }
   };
 
-  const handleDeleteExcuse = async (id: string) => {
+  const handleDeleteExcuse = async (id: string | number) => {
     try {
-      console.log('Deleting excuse with ID:', id);
+      console.log('Deleting excuse with ID:', id, 'Type:', typeof id);
+      
+      // Convert ID to string for consistency
+      const idString = id.toString();
+      
+      // First, let's verify the record exists
+      const { data: existingRecord, error: fetchError } = await supabase
+        .from('excuse_applications')
+        .select('id')
+        .eq('id', idString)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching record to delete:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('Found record to delete:', existingRecord);
       
       const { error } = await supabase
         .from('excuse_applications')
         .delete()
-        .eq('id', id);
+        .eq('id', idString);
 
       if (error) {
         console.error('Supabase delete error:', error);
@@ -560,7 +577,7 @@ const ExcuseApplicationContent = () => {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
+                <PopoverContent className="w-full p-0 z-[100]">
                   <Command>
                     <CommandInput placeholder="Search students..." />
                     <CommandEmpty>No student found.</CommandEmpty>
@@ -607,7 +624,7 @@ const ExcuseApplicationContent = () => {
                     </div>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
+                <PopoverContent className="w-full p-0 z-[100]">
                   <Command>
                     <CommandInput placeholder="Search sessions or dates..." />
                     <CommandEmpty>No session found.</CommandEmpty>
