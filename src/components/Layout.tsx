@@ -15,12 +15,12 @@ const Layout = ({ children }: LayoutProps) => {
       isCollapsed && "sidebar-collapsed"
     )}>
       {/* Sidebar */}
-      <div className="sidebar-desktop">
+      <div className="sidebar-desktop transition-[width] duration-300 ease-in-out">
         <Navigation />
       </div>
       
       {/* Main Content */}
-      <main className="flex-1 min-w-0 px-4 py-3 md:px-6 md:py-4">
+      <main className="flex-1 min-w-0 px-4 py-3 md:px-6 md:py-4 transition-[padding-left] duration-300 ease-in-out">
         {children}
       </main>
     </div>
