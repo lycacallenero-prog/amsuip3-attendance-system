@@ -26,51 +26,6 @@ All colors MUST be HSL.
     min-height: 100vh;
   }
 
-  /* Ensure layout is correct from first render */
-  .layout-container {
-    min-height: 100vh;
-    background-color: hsl(var(--background));
-    display: flex;
-  }
-
-  /* Desktop layout - always show sidebar with proper width */
-  @media (min-width: 768px) {
-    .layout-container {
-      /* Ensure main content has proper margin from start */
-      margin-left: 16rem; /* w-64 */
-    }
-    
-    .sidebar-container {
-      position: fixed;
-      left: 0;
-      top: 0;
-      height: 100vh;
-      width: 16rem; /* w-64 */
-      z-index: 40;
-      display: block;
-    }
-    
-    /* When collapsed, adjust layout */
-    .sidebar-collapsed .layout-container {
-      margin-left: 3rem; /* w-12 */
-    }
-    
-    .sidebar-collapsed .sidebar-container {
-      width: 3rem; /* w-12 */
-    }
-  }
-
-  /* Mobile layout - hide sidebar */
-  @media (max-width: 767px) {
-    .layout-container {
-      margin-left: 0;
-    }
-    
-    .sidebar-container {
-      display: none;
-    }
-  }
-
   /* Skeleton loading state improvements */
   [data-loading] {
     pointer-events: none;
