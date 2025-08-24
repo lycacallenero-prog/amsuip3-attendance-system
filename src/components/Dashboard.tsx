@@ -185,6 +185,11 @@ const Dashboard = () => {
   };
 
   const getUserDisplayName = () => {
+    // Don't show email while profile is still loading
+    if (loading && !userProfile) {
+      return '';
+    }
+    
     if (userProfile?.first_name && userProfile?.last_name) {
       return `${userProfile.first_name} ${userProfile.last_name}`;
     }
@@ -217,7 +222,11 @@ const Dashboard = () => {
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight text-education-navy">{getDashboardTitle()}</h2>
           <p className="text-sm text-muted-foreground">
-            {getGreeting()}, {getUserDisplayName()}! Here's your attendance overview.
+            {getUserDisplayName() ? (
+              `${getGreeting()}, ${getUserDisplayName()}! Here's your attendance overview.`
+            ) : (
+              `${getGreeting()}! Here's your attendance overview.`
+            )}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -239,7 +248,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="pt-1 px-6 pb-4">
             <div className="text-2xl font-bold text-education-navy">
-              {totalStudents.toLocaleString()}
+              {loading ? '' : totalStudents.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Enrolled students
