@@ -353,15 +353,26 @@ const ExcuseApplicationContent = () => {
 
   const handleImageMouseMove = (e: React.MouseEvent) => {
     if (isDragging && imageZoom > 1) {
+      // Add drag sensitivity control - reduce movement by dividing by zoom level
+      const sensitivity = 1 / imageZoom;
       setImagePan({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
+        x: (e.clientX - dragStart.x) * sensitivity,
+        y: (e.clientY - dragStart.y) * sensitivity
       });
     }
   };
 
   const handleImageMouseUp = () => {
     setIsDragging(false);
+  };
+
+  // Reset pan position when zoom changes
+  const handleZoomChange = (newZoom: number) => {
+    setImageZoom(newZoom);
+    // Reset pan position when zoom returns to 100% or below
+    if (newZoom <= 1) {
+      setImagePan({ x: 0, y: 0 });
+    }
   };
 
   const getStatusBadge = (status: ExcuseStatus) => {
@@ -790,7 +801,7 @@ const ExcuseApplicationContent = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setImageZoom(Math.max(0.5, imageZoom - 0.25))}
+                        onClick={() => handleZoomChange(Math.max(0.5, imageZoom - 0.25))}
                       >
                         <ZoomOut className="h-4 w-4" />
                       </Button>
@@ -798,9 +809,17 @@ const ExcuseApplicationContent = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setImageZoom(Math.min(3, imageZoom + 0.25))}
+                        onClick={() => handleZoomChange(Math.min(3, imageZoom + 0.25))}
                       >
                         <ZoomIn className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleZoomChange(1)}
+                        className="ml-2"
+                      >
+                        Reset
                       </Button>
                     </div>
                   )}
