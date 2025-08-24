@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       https: hasCertificates ? {
         key: fs.readFileSync(keyPath),
         cert: fs.readFileSync(certPath),
-      } : true, // Fallback to Vite's built-in HTTPS
+      } : true, // Use Vite's built-in HTTPS
       host: '0.0.0.0', // Allow external connections
     },
     plugins,
