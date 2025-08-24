@@ -14,6 +14,9 @@ const Layout = ({ children }: LayoutProps) => {
   const { isCollapsed } = useSidebar();
   const [isLoading, setIsLoading] = useState(true);
 
+  // Debug: Log the current state
+  console.log('Layout - isDesktop:', isDesktop, 'isCollapsed:', isCollapsed);
+
   useEffect(() => {
     // Prevent content flickering during route transitions
     const timer = setTimeout(() => {
@@ -24,18 +27,18 @@ const Layout = ({ children }: LayoutProps) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background">
       {/* Navigation Component (handles both desktop and mobile) */}
       <Navigation />
       
       {/* Main Content */}
       <main className={cn(
-        "flex-1 min-w-0",
+        "min-w-0",
         "transition-[margin-left] duration-250 ease-in-out", // Match navigation timing
         isDesktop 
           // Collapsed thinner, expanded restored to original
           ? (isCollapsed ? 'ml-12' : 'ml-64') 
-          : 'ml-0',
+          : 'ml-0 w-full px-4', // Add padding for mobile
         "py-3 md:py-4"
       )}>
         {isLoading ? (

@@ -768,6 +768,9 @@ const Navigation = () => {
     setIsMobileOpen(false);
   };
 
+  // Debug: Log the current state
+  console.log('Navigation - isDesktop:', isDesktop);
+
   if (isDesktop) {
     return (
       <div className="fixed left-0 top-0 h-full z-40">
