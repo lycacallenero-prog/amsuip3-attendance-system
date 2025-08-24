@@ -178,24 +178,48 @@ const ExcuseApplicationContent = () => {
         excuse_image_url = publicUrl;
       }
 
-      const { error } = await supabase
-        .from('excuse_applications')
-        .insert([{
-          student_id: parseInt(formData.student_id),
-          session_id: formData.session_id ? parseInt(formData.session_id) : null,
-          absence_date: new Date().toISOString().split('T')[0], // Use current date
-          documentation_url: excuse_image_url || formData.documentation_url,
-          status: 'pending'
-        }]);
+      if (isEditMode && selectedExcuse) {
+        // Update existing excuse
+        const { error } = await supabase
+          .from('excuse_applications')
+          .update({
+            student_id: parseInt(formData.student_id),
+            session_id: formData.session_id ? parseInt(formData.session_id) : null,
+            absence_date: formData.absence_date,
+            documentation_url: excuse_image_url || formData.documentation_url,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedExcuse.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Excuse application submitted successfully",
-      });
+        toast({
+          title: "Success",
+          description: "Excuse application updated successfully",
+        });
+      } else {
+        // Create new excuse
+        const { error } = await supabase
+          .from('excuse_applications')
+          .insert([{
+            student_id: parseInt(formData.student_id),
+            session_id: formData.session_id ? parseInt(formData.session_id) : null,
+            absence_date: formData.absence_date || new Date().toISOString().split('T')[0],
+            documentation_url: excuse_image_url || formData.documentation_url,
+            status: 'pending'
+          }]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Excuse application submitted successfully",
+        });
+      }
 
       setIsFormOpen(false);
+      setIsEditMode(false);
+      setSelectedExcuse(null);
       setFormData({
         student_id: '',
         absence_date: '',
@@ -205,7 +229,7 @@ const ExcuseApplicationContent = () => {
       console.error('Error submitting excuse:', error);
       toast({
         title: "Error",
-        description: "Failed to submit excuse application",
+        description: isEditMode ? "Failed to update excuse application" : "Failed to submit excuse application",
         variant: "destructive",
       });
     }
@@ -243,19 +267,27 @@ const ExcuseApplicationContent = () => {
 
   const handleDeleteExcuse = async (id: string) => {
     try {
+      console.log('Deleting excuse with ID:', id);
+      
       const { error } = await supabase
         .from('excuse_applications')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
 
+      console.log('Delete successful, refreshing list...');
+      
       toast({
         title: "Success",
         description: "Excuse application deleted successfully",
       });
 
-      fetchExcuses();
+      // Refresh the list immediately
+      await fetchExcuses();
       setShowDeleteConfirm(false);
       setDeleteTarget(null);
     } catch (error) {
@@ -404,6 +436,14 @@ const ExcuseApplicationContent = () => {
               onClick={() => {
                 setSelectedExcuse(excuse);
                 setViewMode('edit');
+                setIsEditMode(true);
+                // Populate form with existing data
+                setFormData({
+                  student_id: excuse.student_id?.toString() || '',
+                  session_id: excuse.session_id?.toString() || '',
+                  absence_date: excuse.absence_date || '',
+                  documentation_url: excuse.documentation_url || ''
+                });
                 setIsFormOpen(true);
               }}
               title="Edit Excuse"
@@ -488,7 +528,12 @@ const ExcuseApplicationContent = () => {
         if (!open) {
           setIsEditMode(false);
           setSelectedExcuse(null);
-          setFormData({ student_id: '', absence_date: '' });
+          setFormData({ 
+            student_id: '', 
+            session_id: '',
+            absence_date: '',
+            documentation_url: ''
+          });
         }
       }}>
         <DialogContent className="max-w-md">
