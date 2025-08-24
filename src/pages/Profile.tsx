@@ -333,7 +333,7 @@ const Profile = () => {
 
       {/* Edit Profile Dialog */}
       <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="!max-w-md w-[90vw] mx-auto rounded-lg">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
             <DialogDescription>
@@ -360,11 +360,19 @@ const Profile = () => {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditProfileOpen(false)}>
+          <DialogFooter className="!flex !flex-row !justify-end gap-2 sm:gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setEditProfileOpen(false)}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpdateProfile} disabled={isUpdatingProfile}>
+            <Button 
+              onClick={handleUpdateProfile} 
+              disabled={isUpdatingProfile}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
             </Button>
           </DialogFooter>
@@ -373,7 +381,7 @@ const Profile = () => {
 
       {/* Change Password Dialog */}
       <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="!max-w-md w-[90vw] mx-auto rounded-lg">
           <DialogHeader>
             <DialogTitle>Change Password</DialogTitle>
             <DialogDescription>
@@ -457,11 +465,19 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setChangePasswordOpen(false)}>
+          <DialogFooter className="!flex !flex-row !justify-end gap-2 sm:gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setChangePasswordOpen(false)}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpdatePassword} disabled={isChangingPassword}>
+            <Button 
+              onClick={handleUpdatePassword} 
+              disabled={isChangingPassword}
+              className="flex-1 sm:flex-none sm:min-w-[80px]"
+            >
               {isChangingPassword ? 'Changing...' : 'Change Password'}
             </Button>
           </DialogFooter>
