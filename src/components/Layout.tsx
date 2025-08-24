@@ -17,7 +17,7 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsInitialized(true);
-    }, 100);
+    }, 50); // Reduced delay for faster initialization
     return () => clearTimeout(timer);
   }, []);
 
@@ -36,10 +36,12 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main Content */}
       <main className={cn(
         "flex-1 min-w-0",
-        isInitialized && "transition-[margin-left] duration-300 ease-in-out",
+        // Always apply correct margin, only delay the transition
         isDesktop 
           ? (isCollapsed ? 'ml-12' : 'ml-64') 
           : 'ml-0',
+        // Only add transition after initialization
+        isInitialized && "transition-[margin-left] duration-300 ease-in-out",
         "px-4 py-3 md:px-6 md:py-4"
       )}>
         {children}
