@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Users, BookOpen, TrendingUp, CheckCircle2, BarChart3, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Users, BookOpen, TrendingUp, CheckCircle2, BarChart3, Clock, Activity, Target, AlertCircle, Plus, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 // Use the same role caching system as navigation
 const getCachedUserRole = (): string | null => {
@@ -36,36 +37,80 @@ const setCachedUserRole = (role: string, userId: string) => {
 let cachedUserRole: string | null = getCachedUserRole();
 let cachedUserId: string | null = getCachedUserId();
 
+// Enhanced mock data generation with more realistic patterns
 const generateMockData = (period: 'daily' | 'weekly' | 'monthly') => {
   if (period === 'daily') {
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      const baseAttendance = isWeekend ? 0.85 : 0.92; // Lower attendance on weekends
+      const totalStudents = 1500;
+      const present = Math.floor(totalStudents * baseAttendance + (Math.random() - 0.5) * 50);
+      const absent = totalStudents - present;
       return {
         name: dayName,
-        present: Math.floor(Math.random() * 50) + 70, // 70-120
-        absent: Math.floor(Math.random() * 10) + 5,   // 5-15
+        present,
+        absent,
+        date: date.toISOString().split('T')[0]
       };
     });
   } else if (period === 'weekly') {
-    return Array.from({ length: 8 }, (_, i) => ({
-      name: `Week ${i + 1}`,
-      present: Math.floor(Math.random() * 100) + 200,  // 200-300
-      absent: Math.floor(Math.random() * 30) + 10,     // 10-40
-    }));
+    return Array.from({ length: 8 }, (_, i) => {
+      const baseAttendance = 0.90 + (Math.random() - 0.5) * 0.1;
+      const totalStudents = 1500;
+      const present = Math.floor(totalStudents * baseAttendance);
+      const absent = totalStudents - present;
+      return {
+        name: `Week ${i + 1}`,
+        present,
+        absent,
+        week: i + 1
+      };
+    });
   } else { // monthly
     return [
-      { name: 'Jan', present: 240, absent: 15 },
-      { name: 'Feb', present: 230, absent: 20 },
-      { name: 'Mar', present: 250, absent: 12 },
-      { name: 'Apr', present: 260, absent: 10 },
-      { name: 'May', present: 270, absent: 8 },
-      { name: 'Jun', present: 280, absent: 5 },
-      { name: 'Jul', present: 290, absent: 4 },
-      { name: 'Aug', present: 300, absent: 3 },
+      { name: 'Jan', present: 1350, absent: 150, month: 1 },
+      { name: 'Feb', present: 1320, absent: 180, month: 2 },
+      { name: 'Mar', present: 1380, absent: 120, month: 3 },
+      { name: 'Apr', present: 1410, absent: 90, month: 4 },
+      { name: 'May', present: 1440, absent: 60, month: 5 },
+      { name: 'Jun', present: 1470, absent: 30, month: 6 },
+      { name: 'Jul', present: 1485, absent: 15, month: 7 },
+      { name: 'Aug', present: 1500, absent: 0, month: 8 },
     ];
   }
+};
+
+// Generate pie chart data for attendance distribution
+const generateAttendanceDistribution = () => {
+  const total = 1500;
+  const present = 1410;
+  const absent = 60;
+  const late = 30;
+  
+  return [
+    { name: 'Present', value: present, color: '#10b981' },
+    { name: 'Absent', value: absent, color: '#ef4444' },
+    { name: 'Late', value: late, color: '#f59e0b' }
+  ];
+};
+
+// Generate trend data for attendance over time
+const generateTrendData = () => {
+  return Array.from({ length: 30 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (29 - i));
+    const baseRate = 0.92 + Math.sin(i * 0.2) * 0.05; // Cyclical pattern
+    const attendanceRate = Math.max(0.85, Math.min(0.98, baseRate));
+    
+    return {
+      date: date.toISOString().split('T')[0],
+      rate: Math.round(attendanceRate * 100),
+      students: Math.floor(1500 * attendanceRate)
+    };
+  });
 };
 
 const Dashboard = () => {
@@ -73,7 +118,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>(() => {
-    // Initialize with cached role if available
     return cachedUserRole || 'user';
   });
   const [totalStudents, setTotalStudents] = useState(0);
@@ -81,6 +125,14 @@ const Dashboard = () => {
   const isInitialMount = useRef(true);
   const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [chartData, setChartData] = useState<Array<{name: string, present: number, absent: number}>>([]);
+  const [attendanceDistribution, setAttendanceDistribution] = useState<any[]>([]);
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [realTimeStats, setRealTimeStats] = useState({
+    todayAttendance: 0,
+    todaySessions: 0,
+    activeClasses: 0,
+    pendingExcuses: 0
+  });
   
   // Recent Sessions interface and state
   interface RecentSession {
@@ -95,10 +147,9 @@ const Dashboard = () => {
   
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
 
-  // Fetch recent attendance sessions
+  // Enhanced fetch recent sessions with more realistic data
   const fetchRecentSessions = useCallback(async () => {
     try {
-      // For now, using mock data. In a real app, this would fetch from attendance_records table
       const mockSessions: RecentSession[] = [
         {
           id: '1',
@@ -134,6 +185,15 @@ const Dashboard = () => {
           timeAgo: '3 hours ago',
           status: 'completed',
           attendanceRate: 91
+        },
+        {
+          id: '5',
+          course: 'CHEM 101 - General Chemistry',
+          students: 40,
+          time: '8:00 AM - 9:30 AM',
+          timeAgo: '5 hours ago',
+          status: 'completed',
+          attendanceRate: 88
         }
       ];
       
@@ -143,11 +203,32 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Fetch real-time statistics
+  const fetchRealTimeStats = useCallback(async () => {
+    try {
+      // Mock real-time data - in production, this would fetch from actual database
+      setRealTimeStats({
+        todayAttendance: 1410,
+        todaySessions: 8,
+        activeClasses: 24,
+        pendingExcuses: 12
+      });
+    } catch (error) {
+      console.error('Error fetching real-time stats:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUserProfile();
     fetchTotalStudents();
     fetchRecentSessions();
-  }, [user]);
+    fetchRealTimeStats();
+    
+    // Initialize chart data
+    setChartData(generateMockData(timePeriod));
+    setAttendanceDistribution(generateAttendanceDistribution());
+    setTrendData(generateTrendData());
+  }, [user, timePeriod]);
 
   const fetchUserProfile = async () => {
     // If we have cached role for the same user, don't refetch
@@ -299,71 +380,209 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-sm hover:shadow-md transition-all duration-200 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Students</CardTitle>
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Users className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-blue-700">Total Students</CardTitle>
+            <div className="p-2 bg-blue-200 rounded-lg group-hover:bg-blue-300 transition-colors">
+              <Users className="h-4 w-4 text-blue-800" />
             </div>
           </CardHeader>
           <CardContent className="pt-0 px-6 pb-6">
-            <div className="text-3xl font-bold text-gray-900 mb-1">
+            <div className="text-3xl font-bold text-blue-900 mb-1">
               {loading ? '' : totalStudents.toLocaleString()}
             </div>
-            <p className="text-sm text-gray-500">
-              Enrolled students
-            </p>
+            <div className="flex items-center text-sm text-blue-700">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              +5.2% this month
+            </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-sm hover:shadow-md transition-all duration-200 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-600">Today's Sessions</CardTitle>
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <CalendarDays className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-purple-700">Today's Attendance</CardTitle>
+            <div className="p-2 bg-purple-200 rounded-lg group-hover:bg-purple-300 transition-colors">
+              <Activity className="h-4 w-4 text-purple-800" />
             </div>
           </CardHeader>
           <CardContent className="pt-0 px-6 pb-6">
-            <div className="text-3xl font-bold text-gray-900 mb-1">8</div>
-            <p className="text-sm text-gray-500">
-              +2 from yesterday
-            </p>
+            <div className="text-3xl font-bold text-purple-900 mb-1">
+              {realTimeStats.todayAttendance.toLocaleString()}
+            </div>
+            <div className="flex items-center text-sm text-purple-700">
+              <Target className="h-3 w-3 mr-1" />
+              {realTimeStats.todaySessions} sessions today
+            </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-sm hover:shadow-md transition-all duration-200 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-600">Attendance Rate</CardTitle>
-            <div className="p-2 bg-green-50 rounded-lg">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium text-green-700">Attendance Rate</CardTitle>
+            <div className="p-2 bg-green-200 rounded-lg group-hover:bg-green-300 transition-colors">
+              <CheckCircle2 className="h-4 w-4 text-green-800" />
             </div>
           </CardHeader>
           <CardContent className="pt-0 px-6 pb-6">
-            <div className="text-3xl font-bold text-gray-900 mb-1">94.2%</div>
-            <p className="text-sm text-gray-500">
+            <div className="text-3xl font-bold text-green-900 mb-1">94.2%</div>
+            <div className="flex items-center text-sm text-green-700">
+              <TrendingUp className="h-3 w-3 mr-1" />
               +1.2% from last week
-            </p>
+            </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-0 shadow-sm hover:shadow-md transition-all duration-200 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 px-6 pt-6">
-            <CardTitle className="text-sm font-medium text-gray-600">Active Classes</CardTitle>
-            <div className="p-2 bg-orange-50 rounded-lg">
-              <BookOpen className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium text-orange-700">Active Classes</CardTitle>
+            <div className="p-2 bg-orange-200 rounded-lg group-hover:bg-orange-300 transition-colors">
+              <BookOpen className="h-4 w-4 text-orange-800" />
             </div>
           </CardHeader>
           <CardContent className="pt-0 px-6 pb-6">
-            <div className="text-3xl font-bold text-gray-900 mb-1">24</div>
-            <p className="text-sm text-gray-500">
-              Across all programs
-            </p>
+            <div className="text-3xl font-bold text-orange-900 mb-1">
+              {realTimeStats.activeClasses}
+            </div>
+            <div className="flex items-center text-sm text-orange-700">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              {realTimeStats.pendingExcuses} pending excuses
+            </div>
           </CardContent>
         </Card>
       </div>
       
+      {/* Additional Analytics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-indigo-700">Attendance Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={attendanceDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {attendanceDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name) => [`${value} students`, name]}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex justify-center space-x-4 mt-2">
+              {attendanceDistribution.map((item, index) => (
+                <div key={index} className="flex items-center text-xs">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-1" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-gray-600">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-teal-700">30-Day Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  />
+                  <YAxis 
+                    domain={[80, 100]}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(value) => `${value}%`}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${value}%`, 'Attendance Rate']}
+                    labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="rate" 
+                    stroke="#0d9488" 
+                    strokeWidth={2}
+                    dot={{ fill: '#0d9488', strokeWidth: 2, r: 3 }}
+                    activeDot={{ r: 5, stroke: '#0d9488', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-rose-700">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => navigate('/take-attendance')}
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Take Attendance
+              </Button>
+              <Button 
+                onClick={() => navigate('/students')}
+                variant="outline"
+                className="w-full border-rose-200 text-rose-700 hover:bg-rose-50"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Manage Students
+              </Button>
+              <Button 
+                onClick={() => navigate('/records')}
+                variant="outline"
+                className="w-full border-rose-200 text-rose-700 hover:bg-rose-50"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Records
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Chart and Recent Sessions Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4 bg-white border-0 shadow-sm">
@@ -375,20 +594,31 @@ const Dashboard = () => {
                   {timePeriod === 'daily' ? 'Daily' : timePeriod === 'weekly' ? 'Weekly' : 'Monthly'} attendance trends
                 </CardDescription>
               </div>
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                {(['daily', 'weekly', 'monthly'] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setTimePeriod(period)}
-                    className={`px-4 py-2 text-sm rounded-md transition-colors font-medium ${
-                      timePeriod === period
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {period.charAt(0).toUpperCase() + period.slice(1)}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                  {(['daily', 'weekly', 'monthly'] as const).map((period) => (
+                    <button
+                      key={period}
+                      onClick={() => setTimePeriod(period)}
+                      className={`px-4 py-2 text-sm rounded-md transition-colors font-medium ${
+                        timePeriod === period
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {period.charAt(0).toUpperCase() + period.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/records')}
+                  className="h-8 px-3 text-xs"
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  View Details
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -500,31 +730,43 @@ const Dashboard = () => {
                 recentSessions.map((session, index) => (
                   <div 
                     key={index}
-                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-200"
                     onClick={() => handleSessionClick(session)}
                   >
                     <div className={`p-2 rounded-lg mr-3 ${
-                      session.status === 'completed' ? 'bg-green-50' : 
-                      session.status === 'ongoing' ? 'bg-blue-50' : 'bg-orange-50'
+                      session.status === 'completed' ? 'bg-green-100' : 
+                      session.status === 'ongoing' ? 'bg-blue-100' : 'bg-orange-100'
                     }`}>
                       {session.status === 'completed' ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-green-700" />
                       ) : session.status === 'ongoing' ? (
-                        <Clock className="h-4 w-4 text-blue-600" />
+                        <Clock className="h-4 w-4 text-blue-700" />
                       ) : (
-                        <CalendarDays className="h-4 w-4 text-orange-600" />
+                        <CalendarDays className="h-4 w-4 text-orange-700" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {session.course}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {session.students} students • {session.time}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-gray-500">
+                          {session.students} students • {session.time}
+                        </p>
+                        {session.attendanceRate && (
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                            {session.attendanceRate}% attendance
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400 ml-2">
-                      {session.timeAgo}
+                    <div className="text-xs text-gray-400 ml-2 text-right">
+                      <div>{session.timeAgo}</div>
+                      {session.status === 'ongoing' && (
+                        <Badge className="bg-blue-100 text-blue-700 text-xs mt-1">
+                          Live
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 ))

@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, X, UserPlus, FileDown, Trash2, Edit, Check, Download, Mail, Phone, GraduationCap, Table, LayoutGrid, Upload, FolderPlus, FileImage, Users, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { Search, X, UserPlus, FileDown, Trash2, Edit, Check, Download, Mail, Phone, GraduationCap, Table, LayoutGrid, Upload, FolderPlus, FileImage, Users, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, Filter, BarChart3, PieChart, TrendingUp, Eye, MoreHorizontal, Calendar, BookOpen, Target, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import StudentImport from "@/components/StudentImport";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { aiService } from "@/lib/aiService";
 import { debounce } from "lodash";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 interface Student {
   id: number;
@@ -38,6 +41,17 @@ interface PaginationState {
 interface FilterState {
   program: string;
   year: string;
+  section: string;
+  status: string;
+}
+
+interface StudentStats {
+  totalStudents: number;
+  byProgram: { program: string; count: number }[];
+  byYear: { year: string; count: number }[];
+  bySection: { section: string; count: number }[];
+  attendanceRate: number;
+  activeStudents: number;
 }
 
 const Students = () => {
@@ -47,10 +61,12 @@ const Students = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     program: '',
-    year: ''
+    year: '',
+    section: '',
+    status: ''
   });
   
-  // Pagination state
+  // Enhanced pagination state
   const [pagination, setPagination] = useState<PaginationState>({
     currentPage: 1,
     pageSize: 50,
@@ -58,8 +74,17 @@ const Students = () => {
     totalPages: 0
   });
 
+  // New state for enhanced features
+  const [selectedStudents, setSelectedStudents] = useState<Set<number>>(new Set());
+  const [showStats, setShowStats] = useState(false);
+  const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
+  const [advancedSearch, setAdvancedSearch] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('firstname');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const [uniquePrograms, setUniquePrograms] = useState<string[]>([]);
   const [uniqueYears, setUniqueYears] = useState<string[]>([]);
+  const [uniqueSections, setUniqueSections] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [uploading, setUploading] = useState<number | null>(null);
   
@@ -78,8 +103,8 @@ const Students = () => {
 
   // Debounced search function
   const debouncedSearch = useMemo(
-    () => debounce((searchTerm: string, program: string, year: string) => {
-      fetchStudents(searchTerm, program, year, 1);
+    () => debounce((searchTerm: string, filters: FilterState) => {
+      fetchStudents(searchTerm, filters, 1);
       setIsSearching(false);
     }, 300),
     []
@@ -91,6 +116,61 @@ const Students = () => {
     year: string | null;
   }
 
+  // Fetch student statistics
+  const fetchStudentStats = useCallback(async () => {
+    try {
+      const { data: studentsData, error } = await supabase
+        .from('students')
+        .select('*');
+      
+      if (error) throw error;
+
+      const totalStudents = studentsData.length;
+      
+      // Calculate statistics
+      const byProgram = studentsData.reduce((acc: any[], student) => {
+        const existing = acc.find(item => item.program === student.program);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ program: student.program, count: 1 });
+        }
+        return acc;
+      }, []);
+
+      const byYear = studentsData.reduce((acc: any[], student) => {
+        const existing = acc.find(item => item.year === student.year);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ year: student.year, count: 1 });
+        }
+        return acc;
+      }, []);
+
+      const bySection = studentsData.reduce((acc: any[], student) => {
+        const existing = acc.find(item => item.section === student.section);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ section: student.section, count: 1 });
+        }
+        return acc;
+      }, []);
+
+      setStudentStats({
+        totalStudents,
+        byProgram: byProgram.sort((a, b) => b.count - a.count),
+        byYear: byYear.sort((a, b) => a.year.localeCompare(b.year)),
+        bySection: bySection.sort((a, b) => a.section.localeCompare(b.section)),
+        attendanceRate: 94.2, // Mock data - would be calculated from attendance records
+        activeStudents: Math.floor(totalStudents * 0.95) // Mock data
+      });
+    } catch (error) {
+      console.error('Error fetching student stats:', error);
+    }
+  }, []);
+
   // Fetch total students count (unfiltered)
   const fetchTotalStudentsCount = useCallback(async () => {
     try {
@@ -98,11 +178,7 @@ const Students = () => {
         .from('students')
         .select('*', { count: 'exact', head: true });
       
-      if (error) {
-        console.error('Error fetching total students count:', error);
-        return;
-      }
-      
+      if (error) throw error;
       setTotalStudentsCount(count || 0);
     } catch (error) {
       console.error('Error fetching total students count:', error);
@@ -112,225 +188,173 @@ const Students = () => {
   // Fetch filter options with pagination
   const fetchFilterOptions = useCallback(async () => {
     try {
-      console.log('Fetching filter options...');
-      
-      let allStudents: StudentProgramData[] = [];
-      let page = 0;
-      const pageSize = 1000;
-      let hasMore = true;
-      
-      // Fetch all students with pagination
-      while (hasMore) {
-        const { data, error, count } = await supabase
-          .from('students')
-          .select('program, year', { count: 'exact' })
-          .not('program', 'is', null)
-          .range(page * pageSize, (page + 1) * pageSize - 1);
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          allStudents = [...allStudents, ...data];
-          page++;
-          
-          // If we got fewer items than requested, we've reached the end
-          if (data.length < pageSize) hasMore = false;
-        } else {
-          hasMore = false;
-        }
-      }
-      
-      console.log(`Fetched ${allStudents.length} students with programs`);
-      
-      // Log raw data for debugging
-      console.log('Raw student data count:', allStudents.length);
-      console.log('Sample student data:', allStudents.slice(0, 3));
-      
-      // Process programs
-      const programSet = new Set<string>();
-      const yearSet = new Set<string>();
-      
-      allStudents.forEach(student => {
-        // Process program
-        if (student.program) {
-          const program = student.program.toString().trim();
-          if (program) programSet.add(program);
-        }
-        
-        // Process year
-        if (student.year) {
-          const year = student.year.toString().trim();
-          if (year) yearSet.add(year);
-        }
-      });
-      
-      // Convert sets to sorted arrays
-      const programs = Array.from(programSet).sort((a, b) => 
-        a.localeCompare(b, 'en', { sensitivity: 'base' })
-      );
-      
-      const years = Array.from(yearSet).sort();
-      
-      console.log('Unique programs found:', programs);
-      console.log('Total unique programs:', programs.length);
-      console.log('Unique years found:', years);
-      
+      const { data, error } = await supabase
+        .from('students')
+        .select('program, year, section')
+        .order('program');
+
+      if (error) throw error;
+
+      const programs = [...new Set(data.map(item => item.program))].filter(Boolean);
+      const years = [...new Set(data.map(item => item.year))].filter(Boolean).sort();
+      const sections = [...new Set(data.map(item => item.section))].filter(Boolean).sort();
+
       setUniquePrograms(programs);
       setUniqueYears(years);
-      
+      setUniqueSections(sections);
     } catch (error) {
       console.error('Error fetching filter options:', error);
-      toast.error('Failed to load filter options');
-    }
-  }, []); // No dependencies - we always want to fetch fresh data
-
-  // Fetch filter options when component mounts
-  useEffect(() => {
-    fetchFilterOptions();
-  }, [fetchFilterOptions]);
-
-  // Main fetch function with server-side pagination and filtering
-  const fetchStudents = useCallback(async (
-    search = '', 
-    program = '', 
-    year = '', 
-    page = 1,
-    pageSize = 50
-  ) => {
-    try {
-      setLoading(true);
-      const startTime = performance.now();
-      
-      // Build Supabase query with count
-      let query = supabase
-        .from('students')
-        .select('*', { count: 'exact' })
-        .order('surname', { ascending: true });
-      
-      // Apply search filter on server side
-      if (search && search.trim()) {
-        const searchTerm = search.trim();
-        query = query.or(`surname.ilike.%${searchTerm}%,firstname.ilike.%${searchTerm}%,student_id.ilike.%${searchTerm}%,middlename.ilike.%${searchTerm}%`);
-      }
-      
-      // Apply program filter
-      if (program && program !== 'all') {
-        query = query.eq('program', program);
-      }
-      
-      // Apply year filter
-      if (year && year !== 'all') {
-        query = query.eq('year', year);
-      }
-      
-      // Apply pagination
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
-      
-      const { data, error, count } = await query;
-      
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(error.message || 'Failed to fetch students');
-      }
-      
-      // Transform the data to match our Student interface
-      const formattedStudents: Student[] = Array.isArray(data) 
-        ? data.map((student) => ({
-            ...student,
-            middlename: student.middlename || '',
-            email: student.email || '',
-            contact_no: student.contact_no || '',
-            status: student.status || 'active'
-          }))
-        : [];
-      
-      const totalCount = count || 0;
-      const totalPages = Math.ceil(totalCount / pageSize);
-      
-      setStudents(formattedStudents);
-      setPagination({
-        currentPage: page,
-        pageSize,
-        totalCount,
-        totalPages
-      });
-      
-      const endTime = performance.now();
-      console.log(`Query completed in ${(endTime - startTime).toFixed(2)}ms`);
-      
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      toast.error('Failed to load students. Please try again.');
-      setStudents([]);
-      setPagination(prev => ({ ...prev, totalCount: 0, totalPages: 0 }));
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
+  // Enhanced fetch students with sorting and advanced filtering
+  const fetchStudents = useCallback(async (search: string, filters: FilterState, page: number) => {
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('students')
+        .select('*', { count: 'exact' });
+
+      // Apply search filter
+      if (search.trim()) {
+        query = query.or(`firstname.ilike.%${search}%,surname.ilike.%${search}%,student_id.ilike.%${search}%,email.ilike.%${search}%`);
+      }
+
+      // Apply filters
+      if (filters.program) {
+        query = query.eq('program', filters.program);
+      }
+      if (filters.year) {
+        query = query.eq('year', filters.year);
+      }
+      if (filters.section) {
+        query = query.eq('section', filters.section);
+      }
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      // Apply pagination
+      const from = (page - 1) * pagination.pageSize;
+      const to = from + pagination.pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      setStudents(data || []);
+      setPagination(prev => ({
+        ...prev,
+        currentPage: page,
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pagination.pageSize)
+      }));
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.pageSize, sortBy, sortOrder]);
+
+  // Handle search and filter changes
+  useEffect(() => {
     setIsSearching(true);
-    
-    // Reset to first page when searching
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    
-    // Debounced search
-    debouncedSearch(value, filters.program, filters.year);
+    debouncedSearch(searchTerm, filters);
+  }, [searchTerm, filters, debouncedSearch]);
+
+  // Handle sorting changes
+  useEffect(() => {
+    fetchStudents(searchTerm, filters, pagination.currentPage);
+  }, [sortBy, sortOrder]);
+
+  // Bulk operations
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedStudents(new Set(students.map(s => s.id)));
+    } else {
+      setSelectedStudents(new Set());
+    }
   };
 
-  // Handle filter changes
-  const handleFilterChange = (filterName: keyof FilterState, value: string) => {
-    const newFilters = {
-      ...filters,
-      [filterName]: value === 'all' ? '' : value
-    };
-    
-    setFilters(newFilters);
-    
-    // Reset to first page when filtering
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    
-    // Apply filters immediately
-    fetchStudents(searchTerm, newFilters.program, newFilters.year, 1, pagination.pageSize);
+  const handleSelectStudent = (studentId: number, checked: boolean) => {
+    const newSelected = new Set(selectedStudents);
+    if (checked) {
+      newSelected.add(studentId);
+    } else {
+      newSelected.delete(studentId);
+    }
+    setSelectedStudents(newSelected);
   };
 
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > pagination.totalPages) return;
-    
-    setPagination(prev => ({ ...prev, currentPage: newPage }));
-    fetchStudents(searchTerm, filters.program, filters.year, newPage, pagination.pageSize);
+  const handleBulkDelete = async () => {
+    if (selectedStudents.size === 0) {
+      toast({
+        title: "Warning",
+        description: "Please select students to delete",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .in('id', Array.from(selectedStudents));
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedStudents.size} student(s)`,
+      });
+
+      setSelectedStudents(new Set());
+      fetchStudents(searchTerm, filters, pagination.currentPage);
+      fetchTotalStudentsCount();
+      fetchStudentStats();
+    } catch (error) {
+      console.error('Error deleting students:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete students",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Handle page size change
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPagination(prev => ({ 
-      ...prev, 
-      pageSize: newPageSize, 
-      currentPage: 1 
-    }));
-    fetchStudents(searchTerm, filters.program, filters.year, 1, newPageSize);
-  };
+  const handleBulkExport = () => {
+    if (selectedStudents.size === 0) {
+      toast({
+        title: "Warning",
+        description: "Please select students to export",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchTerm('');
-    setFilters({ program: '', year: '' });
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    setIsSearching(false);
-    fetchStudents('', '', '', 1, pagination.pageSize);
+    // Mock export functionality
+    toast({
+      title: "Export Started",
+      description: `Exporting ${selectedStudents.size} student(s) to CSV`,
+    });
   };
 
   // Initialize component
   useEffect(() => {
     fetchFilterOptions();
-    fetchStudents('', '', '', 1, 50);
+    fetchStudents('', filters, 1);
     fetchTotalStudentsCount();
+    fetchStudentStats();
   }, []);
 
   // Cleanup debounced function
@@ -342,7 +366,7 @@ const Students = () => {
 
   const handleStudentAdded = () => {
     // Refresh current page
-    fetchStudents(searchTerm, filters.program, filters.year, pagination.currentPage, pagination.pageSize);
+    fetchStudents(searchTerm, filters, pagination.currentPage);
     // Refresh total count
     fetchTotalStudentsCount();
     toast.success('Student added successfully!');
@@ -362,7 +386,7 @@ const Students = () => {
     
     // Refresh to ensure consistency
     setTimeout(() => {
-      fetchStudents(searchTerm, filters.program, filters.year, pagination.currentPage, pagination.pageSize);
+      fetchStudents(searchTerm, filters, pagination.currentPage);
       fetchTotalStudentsCount();
     }, 500);
   };
@@ -503,7 +527,7 @@ const Students = () => {
       }
       
       // Refresh current page
-      fetchStudents(searchTerm, filters.program, filters.year, pagination.currentPage, pagination.pageSize);
+      fetchStudents(searchTerm, filters, pagination.currentPage);
       
       return { urls };
     } catch (error) {
@@ -580,7 +604,10 @@ const Students = () => {
             <span>Show:</span>
             <Select
               value={pageSize.toString()}
-              onValueChange={(value) => handlePageSizeChange(parseInt(value))}
+              onValueChange={(value) => {
+                setPagination(prev => ({ ...prev, pageSize: parseInt(value), currentPage: 1 }));
+                fetchStudents(searchTerm, filters, 1);
+              }}
             >
               <SelectTrigger className="w-20 h-8">
                 <SelectValue />
@@ -599,7 +626,10 @@ const Students = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePageChange(1)}
+            onClick={() => {
+              setPagination(prev => ({ ...prev, currentPage: 1 }));
+              fetchStudents(searchTerm, filters, 1);
+            }}
             disabled={currentPage === 1}
             className="h-8 w-8 p-0"
           >
@@ -609,7 +639,10 @@ const Students = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => {
+              setPagination(prev => ({ ...prev, currentPage: currentPage - 1 }));
+              fetchStudents(searchTerm, filters, currentPage - 1);
+            }}
             disabled={currentPage === 1}
             className="h-8 w-8 p-0"
           >
@@ -621,7 +654,10 @@ const Students = () => {
               key={index}
               variant={currentPage === page ? "default" : "outline"}
               size="sm"
-              onClick={() => typeof page === 'number' && handlePageChange(page)}
+              onClick={() => typeof page === 'number' && {
+                setPagination(prev => ({ ...prev, currentPage: page }));
+                fetchStudents(searchTerm, filters, page);
+              }}
               disabled={typeof page === 'string'}
               className="h-8 min-w-[32px] px-2"
             >
@@ -632,7 +668,10 @@ const Students = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
+            onClick={() => {
+              setPagination(prev => ({ ...prev, currentPage: currentPage + 1 }));
+              fetchStudents(searchTerm, filters, currentPage + 1);
+            }}
             disabled={currentPage === totalPages}
             className="h-8 w-8 p-0"
           >
@@ -642,7 +681,10 @@ const Students = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePageChange(totalPages)}
+            onClick={() => {
+              setPagination(prev => ({ ...prev, currentPage: totalPages }));
+              fetchStudents(searchTerm, filters, totalPages);
+            }}
             disabled={currentPage === totalPages}
             className="h-8 w-8 p-0"
           >
@@ -689,14 +731,14 @@ const Students = () => {
                   placeholder="Search by name or ID..."
                   className="pl-10 pr-10 h-10 w-full text-sm bg-background border-border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 [&::-webkit-search-cancel-button]:hidden"
                   value={searchTerm}
-                  onChange={handleSearchChange}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   type="search"
                 />
               </div>
               
               <Select
                 value={filters.program || 'all'}
-                onValueChange={(value) => handleFilterChange('program', value)}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, program: value === 'all' ? '' : value }))}
               >
                 <SelectTrigger className="h-10 min-w-[140px] border-border hover:bg-muted/80 transition-colors duration-200">
                   <SelectValue placeholder="All Programs" />
@@ -713,7 +755,7 @@ const Students = () => {
               
               <Select
                 value={filters.year || 'all'}
-                onValueChange={(value) => handleFilterChange('year', value)}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, year: value === 'all' ? '' : value }))}
               >
                 <SelectTrigger className="h-10 min-w-[100px] border-border hover:bg-muted/80 transition-colors duration-200">
                   <SelectValue placeholder="All Years" />
@@ -725,6 +767,37 @@ const Students = () => {
                       {year}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.section || 'all'}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, section: value === 'all' ? '' : value }))}
+              >
+                <SelectTrigger className="h-10 min-w-[100px] border-border hover:bg-muted/80 transition-colors duration-200">
+                  <SelectValue placeholder="All Sections" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border shadow-elegant">
+                  <SelectItem value="all">All Sections</SelectItem>
+                  {uniqueSections.map((section) => (
+                    <SelectItem key={section} value={section}>
+                      {section}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.status || 'all'}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === 'all' ? '' : value }))}
+              >
+                <SelectTrigger className="h-10 min-w-[100px] border-border hover:bg-muted/80 transition-colors duration-200">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border shadow-elegant">
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -756,14 +829,14 @@ const Students = () => {
               ) : (
                 <>
                   Showing {students.length} of {pagination.totalCount.toLocaleString()} students
-                  {(searchTerm || filters.program || filters.year) && (
+                  {(searchTerm || filters.program || filters.year || filters.section || filters.status) && (
                     <span>
                       {' '}matching current filters
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         className="ml-2 h-auto p-0 text-blue-600 hover:bg-accent/30 hover:text-blue-700 hover:underline transition-colors duration-200 rounded-sm px-1.5 py-0.5"
-                        onClick={clearFilters}
+                        onClick={() => setFilters({ program: '', year: '', section: '', status: '' })}
                       >
                         Clear all
                       </Button>
@@ -782,6 +855,46 @@ const Students = () => {
                 Students {pagination.currentPage > 1 && `(Page ${pagination.currentPage})`}
               </span>
             </h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAdvancedSearch(!advancedSearch)}
+                className="h-8 w-8 p-0"
+                title={advancedSearch ? "Hide Advanced Search" : "Show Advanced Search"}
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStats(!showStats)}
+                className="h-8 w-8 p-0"
+                title={showStats ? "Hide Stats" : "Show Stats"}
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={selectedStudents.size === 0}
+                className="h-8 w-8 p-0"
+                title="Delete Selected"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkExport}
+                disabled={selectedStudents.size === 0}
+                className="h-8 w-8 p-0"
+                title="Export Selected"
+              >
+                <FileDown className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         
           {viewMode === 'table' ? (
@@ -790,6 +903,13 @@ const Students = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr className="text-xs text-gray-500">
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    <Checkbox
+                      checked={selectedStudents.size === students.length && students.length > 0}
+                      onCheckedChange={handleSelectAll}
+                      indeterminate={selectedStudents.size > 0 && selectedStudents.size < students.length}
+                    />
+                  </th>
                   <th scope="col" className="px-3 py-2 text-left font-medium">Student</th>
                   <th scope="col" className="px-3 py-2 text-left font-medium">ID</th>
                   <th scope="col" className="px-3 py-2 text-left font-medium">Program</th>
@@ -801,7 +921,7 @@ const Students = () => {
               <tbody className="bg-white divide-y divide-gray-200 text-sm">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center">
+                    <td colSpan={7} className="px-3 py-6 text-center">
                       <div className="flex justify-center">
                         <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                       </div>
@@ -810,7 +930,7 @@ const Students = () => {
                   </tr>
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-3 py-8 text-center text-sm text-gray-500">
                       {pagination.totalCount === 0 
                         ? 'No students found. Add your first student!'
                         : 'No students match the current filters. Try adjusting your search or filters.'}
@@ -819,7 +939,7 @@ const Students = () => {
                           variant="outline" 
                           size="sm"
                           className="mt-3 h-8 text-xs hover:bg-gray-100 hover:text-gray-900"
-                          onClick={clearFilters}
+                          onClick={() => setFilters({ program: '', year: '', section: '', status: '' })}
                         >
                           Clear all filters
                         </Button>
@@ -829,6 +949,12 @@ const Students = () => {
                 ) : (
                   students.map((student) => (
                     <tr key={student.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <Checkbox
+                          checked={selectedStudents.has(student.id)}
+                          onCheckedChange={(checked) => handleSelectStudent(student.id, checked)}
+                        />
+                      </td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
@@ -917,7 +1043,7 @@ const Students = () => {
                       variant="outline" 
                       size="sm"
                       className="mt-3 h-8 text-xs hover:bg-gray-100 hover:text-gray-900"
-                      onClick={clearFilters}
+                      onClick={() => setFilters({ program: '', year: '', section: '', status: '' })}
                     >
                       Clear all filters
                     </Button>
@@ -1153,36 +1279,173 @@ const Students = () => {
       )}
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-        <Card className="bg-gradient-card border-0 shadow-card">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{totalStudentsCount.toLocaleString()}</div>
-            <div className="text-sm text-gray-500">Total Students</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-0 shadow-card">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-accent">
-              {students.filter(student => student.status === 'Active').length.toLocaleString()}
-            </div>
-            <div className="text-sm text-muted-foreground">Active Students (Current Page)</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-0 shadow-card">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">89.2%</div>
-            <div className="text-sm text-muted-foreground">Avg Attendance</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-card border-0 shadow-card">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-education-green">
-              {uniquePrograms.length}
-            </div>
-            <div className="text-sm text-muted-foreground">Programs</div>
-          </CardContent>
-        </Card>
-      </div>
+      {showStats && studentStats && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <Card className="bg-gradient-card border-0 shadow-card">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-gray-900">{studentStats.totalStudents.toLocaleString()}</div>
+                <div className="text-sm text-gray-500">Total Students</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-card border-0 shadow-card">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-accent">
+                  {studentStats.activeStudents.toLocaleString()}
+                </div>
+                <div className="text-sm text-muted-foreground">Active Students</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-card border-0 shadow-card">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {studentStats.attendanceRate.toFixed(1)}%
+                </div>
+                <div className="text-sm text-muted-foreground">Avg Attendance</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-card border-0 shadow-card">
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-education-green">
+                  {studentStats.byProgram.length}
+                </div>
+                <div className="text-sm text-muted-foreground">Programs</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Enhanced Statistics Visualization */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            {/* Students by Program */}
+            <Card className="bg-white border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-700">Students by Program</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={studentStats.byProgram.slice(0, 8)}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="program" 
+                        tick={{ fontSize: 10 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 10 }}
+                        tickFormatter={(value) => value.toString()}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [`${value} students`, 'Count']}
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        }}
+                      />
+                      <Bar 
+                        dataKey="count" 
+                        fill="#3b82f6" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Students by Year */}
+            <Card className="bg-white border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-700">Students by Year</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={studentStats.byYear}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="count"
+                      >
+                        {studentStats.byYear.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5]} 
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name) => [`${value} students`, `Year ${name}`]}
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          borderRadius: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        }}
+                      />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 mt-2">
+                  {studentStats.byYear.map((item, index) => (
+                    <div key={index} className="flex items-center text-xs">
+                      <div 
+                        className="w-3 h-3 rounded-full mr-1" 
+                        style={{ 
+                          backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5] 
+                        }}
+                      />
+                      <span className="text-gray-600">Year {item.year}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Students by Section */}
+            <Card className="bg-white border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-700">Students by Section</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {studentStats.bySection.slice(0, 6).map((section, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Section {section.section}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ 
+                              width: `${(section.count / Math.max(...studentStats.bySection.map(s => s.count))) * 100}%` 
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 w-8 text-right">
+                          {section.count}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {studentStats.bySection.length > 6 && (
+                    <div className="text-xs text-gray-500 text-center pt-2">
+                      +{studentStats.bySection.length - 6} more sections
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
 
       {/* Image Preview Modal */}
       {previewImage && (
