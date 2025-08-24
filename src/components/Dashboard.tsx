@@ -212,7 +212,7 @@ const Dashboard = () => {
   }, [chartData]);
 
   return (
-    <div className="flex-1 space-y-4 p-3 opacity-100 transition-opacity duration-300">
+    <div className="flex-1 space-y-4 px-6 py-4 opacity-100 transition-opacity duration-300">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight text-education-navy">{getDashboardTitle()}</h2>

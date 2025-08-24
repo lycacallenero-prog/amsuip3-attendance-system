@@ -631,7 +631,7 @@ const Students = () => {
   return (
     <Layout>
       <PageWrapper skeletonType="table">
-        <div className="container mx-auto p-3">
+        <div className="px-6 py-4">
         <div className="mb-3">
           <div className="flex flex-col">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1">

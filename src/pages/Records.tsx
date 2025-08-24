@@ -103,7 +103,7 @@ const Records = () => {
   return (
     <Layout>
       <PageWrapper skeletonType="table">
-        <div className="p-3 space-y-4">
+        <div className="px-6 py-4 space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>

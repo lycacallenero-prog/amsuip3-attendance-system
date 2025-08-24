@@ -403,7 +403,7 @@ export default function SessionStudents() {
 
   return (
     <Layout>
-      <div className="px-4 py-3 space-y-4 max-w-7xl mx-auto">
+      <div className="px-6 py-4 space-y-4 max-w-7xl mx-auto">
         {/* Page Header - Session Title */}
         <div className="space-y-0.5">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">

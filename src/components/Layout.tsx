@@ -44,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
           // Collapsed thinner, expanded restored to original
           ? (isCollapsed ? 'ml-12' : 'ml-64') 
           : 'ml-0',
-        "px-4 py-3 md:px-6 md:py-4"
+        "py-3 md:py-4"
       )}>
         {isLoading ? (
           <div className="space-y-4">
