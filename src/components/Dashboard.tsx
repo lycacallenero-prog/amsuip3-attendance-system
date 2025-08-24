@@ -222,11 +222,7 @@ const Dashboard = () => {
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight text-education-navy">{getDashboardTitle()}</h2>
           <p className="text-sm text-muted-foreground">
-            {getUserDisplayName() ? (
-              `${getGreeting()}, ${getUserDisplayName()}! Here's your attendance overview.`
-            ) : (
-              `${getGreeting()}! Here's your attendance overview.`
-            )}
+            {getGreeting()}! Here's your attendance overview.
           </p>
         </div>
         <div className="flex items-center space-x-2">
