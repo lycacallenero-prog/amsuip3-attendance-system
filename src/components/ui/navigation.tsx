@@ -526,14 +526,14 @@ const DesktopNavigation = () => {
       
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="max-w-md mx-auto">
+        <DialogContent className="!max-w-md w-[90vw] mx-auto">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
               Are you sure you want to log out? You will need to sign in again to access your account.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex gap-2 sm:gap-3">
+          <DialogFooter className="!flex !flex-row !justify-end gap-2 sm:gap-3">
             <Button 
               variant="outline" 
               onClick={() => setShowLogoutConfirm(false)}
@@ -574,6 +574,11 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      // Force a small delay to ensure the element renders in closed position first
+      const timer = setTimeout(() => {
+        // This ensures the animation triggers properly
+      }, 10);
+      return () => clearTimeout(timer);
     } else {
       // Delay hiding to allow animation to complete
       const timer = setTimeout(() => {
@@ -684,6 +689,10 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
           "fixed inset-y-0 left-0 w-64 bg-background p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{
+          // Ensure the element always starts in the correct position for animation
+          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)'
+        }}
       >
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
@@ -764,14 +773,14 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="max-w-md mx-auto">
+        <DialogContent className="!max-w-md w-[90vw] mx-auto">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>
               Are you sure you want to log out? You will need to sign in again to access your account.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex gap-2 sm:gap-3">
+          <DialogFooter className="!flex !flex-row !justify-end gap-2 sm:gap-3">
             <Button 
               variant="outline" 
               onClick={() => setShowLogoutConfirm(false)}
