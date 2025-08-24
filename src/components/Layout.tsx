@@ -20,7 +20,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
       
       {/* Main Content */}
-      <main className="flex-1 min-w-0 px-4 py-3 md:px-6 md:py-4 transition-[padding-left] duration-300 ease-in-out">
+      <main className="flex-1 min-w-0 px-4 py-3 md:px-6 md:py-4 transition-[margin-left] duration-300 ease-in-out">
         {children}
       </main>
     </div>

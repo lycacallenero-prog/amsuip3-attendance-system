@@ -37,7 +37,7 @@ All colors MUST be HSL.
   @media (min-width: 768px) {
     .layout-wrapper {
       /* Ensure main content has proper margin from start */
-      padding-left: 16rem; /* w-64 */
+      margin-left: 16rem; /* w-64 */
     }
     
     .sidebar-desktop {
@@ -52,7 +52,7 @@ All colors MUST be HSL.
     
     /* When collapsed, adjust layout */
     .sidebar-collapsed .layout-wrapper {
-      padding-left: 3rem; /* w-12 */
+      margin-left: 3rem; /* w-12 */
     }
     
     .sidebar-collapsed .sidebar-desktop {
@@ -63,7 +63,7 @@ All colors MUST be HSL.
   /* Mobile layout - hide sidebar */
   @media (max-width: 767px) {
     .layout-wrapper {
-      padding-left: 0;
+      margin-left: 0;
     }
     
     .sidebar-desktop {

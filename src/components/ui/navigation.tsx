@@ -111,6 +111,7 @@ const DesktopNavigation = () => {
     return 'user';
   });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isCollapsing, setIsCollapsing] = useState(false);
   const isInitialMount = useRef(true);
   const navItems = getNavItems(userRole);
 
@@ -188,7 +189,19 @@ const DesktopNavigation = () => {
   };
 
   const handleToggleSidebar = () => {
-    toggleSidebar();
+    if (!isCollapsed) {
+      // Starting to collapse - instantly hide labels
+      setIsCollapsing(true);
+      // Start the actual collapse after a minimal delay to ensure instant fade
+      setTimeout(() => {
+        toggleSidebar();
+        // Reset collapsing state after animation completes
+        setTimeout(() => setIsCollapsing(false), 300);
+      }, 50);
+    } else {
+      // Expanding - normal behavior
+      toggleSidebar();
+    }
   };
 
   return (
@@ -232,8 +245,8 @@ const DesktopNavigation = () => {
            )}
           <div className={cn(
             "flex-1 flex items-center overflow-hidden",
-            "transition-all duration-300 ease-in-out",
-            isCollapsed ? "opacity-0 translate-x-2 w-0" : "opacity-100 translate-x-0"
+            isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-250",
+            isCollapsed || isCollapsing ? "opacity-0 translate-x-2 w-0" : "opacity-100 translate-x-0"
           )}>
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-education-navy whitespace-nowrap">AMSUIP</h1>
@@ -251,11 +264,12 @@ const DesktopNavigation = () => {
           {/* MENU Label */}
           {!isCollapsed && (
             <div className={cn(
-              "transition-all duration-300 ease-in-out",
+              "transition-all duration-300 ease-in-out delay-200",
               "px-3 pb-0"
             )}>
               <span className={cn(
                 "font-medium text-muted-foreground/60 uppercase tracking-wider block",
+                isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-300",
                 "text-xs opacity-100 text-left"
               )}>
                 MENU
@@ -291,6 +305,10 @@ const DesktopNavigation = () => {
                       : "bg-gradient-primary shadow-glow text-white"
                     : "hover:bg-sidebar-accent/50 hover:text-foreground"
                 )}
+                style={{
+                  // Progressive delay for smooth upward movement
+                  transitionDelay: isCollapsed ? `${250 + index * 30}ms` : '0ms'
+                }}
               >
                   <Icon className={cn(
                     "flex-shrink-0",
@@ -300,8 +318,8 @@ const DesktopNavigation = () => {
                   
                   <span className={cn(
                     "font-medium whitespace-nowrap min-w-0",
-                    "transition-all duration-300 ease-in-out",
-                    isCollapsed
+                    isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-300",
+                    isCollapsed || isCollapsing
                       ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                       : "opacity-100 translate-x-0 flex-1 text-sm"
                   )}>
@@ -338,11 +356,12 @@ const DesktopNavigation = () => {
           {/* OTHER Label */}
           {!isCollapsed && (
             <div className={cn(
-              "transition-all duration-300 ease-in-out",
+              "transition-all duration-300 ease-in-out delay-400",
               "px-3 py-0"
             )}>
               <span className={cn(
                 "font-medium text-muted-foreground/60 uppercase tracking-wider block",
+                isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-450",
                 "text-xs opacity-100 text-left"
               )}>
                 OTHER
@@ -358,7 +377,7 @@ const DesktopNavigation = () => {
                   <div
                     className={cn(
                       "flex items-center cursor-pointer group relative",
-                      "transition-all duration-300 ease-in-out",
+                      "transition-all duration-300 ease-in-out delay-400",
                       isCollapsed 
                         ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                         : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -376,8 +395,8 @@ const DesktopNavigation = () => {
                     )} />
                     <span className={cn(
                       "font-medium whitespace-nowrap min-w-0",
-                      "transition-all duration-300 ease-in-out",
-                      isCollapsed
+                      isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-450",
+                      isCollapsed || isCollapsing
                         ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                         : "opacity-100 translate-x-0 flex-1 text-sm"
                     )}>
@@ -393,7 +412,7 @@ const DesktopNavigation = () => {
               <div
                 className={cn(
                   "flex items-center cursor-pointer group relative",
-                  "transition-all duration-300 ease-in-out",
+                  "transition-all duration-300 ease-in-out delay-400",
                   isCollapsed 
                     ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                     : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -411,8 +430,8 @@ const DesktopNavigation = () => {
                 )} />
                 <span className={cn(
                   "font-medium whitespace-nowrap min-w-0",
-                  "transition-all duration-300 ease-in-out",
-                  isCollapsed
+                  isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-450",
+                  isCollapsed || isCollapsing
                     ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                     : "opacity-100 translate-x-0 flex-1 text-sm"
                 )}>
@@ -461,7 +480,7 @@ const DesktopNavigation = () => {
             <div
               className={cn(
                 "flex items-center cursor-pointer group relative",
-                "transition-all duration-300 ease-in-out",
+                "transition-all duration-300 ease-in-out delay-450",
                 isCollapsed 
                   ? "h-8 justify-center w-6 mx-auto p-0 rounded-sm" // Larger container with smaller active background
                   : "h-9 justify-start gap-3 px-3 w-full rounded-sm", // Slightly smaller expanded items, perfect square-round
@@ -476,8 +495,8 @@ const DesktopNavigation = () => {
                 )} />
               <span className={cn(
                 "font-medium whitespace-nowrap min-w-0",
-                "transition-all duration-300 ease-in-out",
-                isCollapsed
+                isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-500",
+                isCollapsed || isCollapsing
                   ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
                   : "opacity-100 translate-x-0 flex-1 text-sm"
               )}>
