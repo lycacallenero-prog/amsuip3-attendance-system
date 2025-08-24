@@ -391,6 +391,7 @@ const ExcuseApplicationContent = () => {
               onClick={() => {
                 setSelectedExcuse(excuse);
                 setViewMode('view');
+                setIsViewOpen(true);
               }}
               title="View Excuse"
             >

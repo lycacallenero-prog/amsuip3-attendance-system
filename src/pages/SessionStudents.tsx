@@ -261,7 +261,7 @@ export default function SessionStudents() {
     const endItem = Math.min(currentPage * pageSize, totalCount);
 
     return (
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
         <div className="flex items-center text-sm text-gray-700">
           <span>Showing {startItem.toLocaleString()} to {endItem.toLocaleString()} of {totalCount.toLocaleString()} students</span>
           <div className="ml-4 flex items-center space-x-2">
