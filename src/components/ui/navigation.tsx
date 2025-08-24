@@ -712,7 +712,7 @@ const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
               MENU
             </span>
           </div>
-          {navItems.map((item) => {
+          {navItems.filter(item => item.href !== '/students' && item.href !== '/academic-year' || userRole === 'admin').map((item) => {
             const isActive = item.isActive 
               ? item.isActive(location.pathname) 
               : location.pathname === item.href;
