@@ -245,8 +245,8 @@ const DesktopNavigation = () => {
            )}
           <div className={cn(
             "flex-1 flex items-center overflow-hidden",
-            isCollapsing ? "transition-opacity duration-75" : "transition-all duration-300 ease-in-out delay-250",
-            isCollapsed || isCollapsing ? "opacity-0 translate-x-2 w-0" : "opacity-100 translate-x-0"
+            isCollapsing ? "transition-all duration-75" : "transition-all duration-300 ease-in-out delay-250",
+            isCollapsed || isCollapsing ? "opacity-0 translate-x-4 w-0" : "opacity-100 translate-x-0"
           )}>
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-education-navy whitespace-nowrap">AMSUIP</h1>
@@ -318,9 +318,9 @@ const DesktopNavigation = () => {
                   
                   <span className={cn(
                     "font-medium whitespace-nowrap min-w-0",
-                    isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-300",
+                    isCollapsing ? "transition-all duration-75" : "transition-all duration-250 ease-in-out delay-300",
                     isCollapsed || isCollapsing
-                      ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
+                      ? "opacity-0 translate-x-4 w-0 overflow-hidden text-xs" 
                       : "opacity-100 translate-x-0 flex-1 text-sm"
                   )}>
                     {item.label}
@@ -395,9 +395,9 @@ const DesktopNavigation = () => {
                     )} />
                     <span className={cn(
                       "font-medium whitespace-nowrap min-w-0",
-                      isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-450",
+                      isCollapsing ? "transition-all duration-75" : "transition-all duration-250 ease-in-out delay-450",
                       isCollapsed || isCollapsing
-                        ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
+                        ? "opacity-0 translate-x-4 w-0 overflow-hidden text-xs" 
                         : "opacity-100 translate-x-0 flex-1 text-sm"
                     )}>
                       Profile
@@ -430,9 +430,9 @@ const DesktopNavigation = () => {
                 )} />
                 <span className={cn(
                   "font-medium whitespace-nowrap min-w-0",
-                  isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-450",
+                  isCollapsing ? "transition-all duration-75" : "transition-all duration-250 ease-in-out delay-450",
                   isCollapsed || isCollapsing
-                    ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
+                    ? "opacity-0 translate-x-4 w-0 overflow-hidden text-xs" 
                     : "opacity-100 translate-x-0 flex-1 text-sm"
                 )}>
                   Profile
@@ -497,7 +497,7 @@ const DesktopNavigation = () => {
                 "font-medium whitespace-nowrap min-w-0",
                 isCollapsing ? "transition-opacity duration-75" : "transition-all duration-250 ease-in-out delay-500",
                 isCollapsed || isCollapsing
-                  ? "opacity-0 translate-x-2 w-0 overflow-hidden text-xs" 
+                  ? "opacity-0 translate-x-4 w-0 overflow-hidden text-xs" 
                   : "opacity-100 translate-x-0 flex-1 text-sm"
               )}>
                 Log Out
