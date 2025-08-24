@@ -78,7 +78,6 @@ const Dashboard = () => {
   });
   const [totalStudents, setTotalStudents] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
   const isInitialMount = useRef(true);
   const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [chartData, setChartData] = useState<Array<{name: string, present: number, absent: number}>>([]);
@@ -89,8 +88,6 @@ const Dashboard = () => {
   }, [user]);
 
   const fetchUserProfile = async () => {
-    setProfileLoading(true);
-    
     // If we have cached role for the same user, don't refetch
     if (cachedUserRole && cachedUserId === user?.id) {
       setUserRole(cachedUserRole);
@@ -104,7 +101,6 @@ const Dashboard = () => {
       setUserRole(defaultRole);
       cachedUserRole = defaultRole;
       cachedUserId = null;
-      setProfileLoading(false);
       return;
     }
     
@@ -133,16 +129,11 @@ const Dashboard = () => {
         cachedUserId = user.id;
         setCachedUserRole(defaultRole, user.id);
       }
-    } finally {
-      setProfileLoading(false);
     }
   };
 
   const fetchProfileData = async () => {
-    if (!user) {
-      setProfileLoading(false);
-      return;
-    }
+    if (!user) return;
     
     try {
       const { data, error } = await supabase
@@ -155,8 +146,6 @@ const Dashboard = () => {
       setUserProfile(data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-    } finally {
-      setProfileLoading(false);
     }
   };
 
@@ -196,11 +185,6 @@ const Dashboard = () => {
   };
 
   const getUserDisplayName = () => {
-    // Don't show email while profile is loading
-    if (profileLoading) {
-      return '';
-    }
-    
     if (userProfile?.first_name && userProfile?.last_name) {
       return `${userProfile.first_name} ${userProfile.last_name}`;
     }
@@ -233,14 +217,7 @@ const Dashboard = () => {
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight text-education-navy">{getDashboardTitle()}</h2>
           <p className="text-sm text-muted-foreground">
-            {profileLoading ? (
-              <span className="inline-flex items-center">
-                <div className="animate-spin rounded-full h-3 w-3 border-b border-primary mr-2"></div>
-                Loading...
-              </span>
-            ) : (
-              `${getGreeting()}, ${getUserDisplayName()}! Here's your attendance overview.`
-            )}
+            {getGreeting()}, {getUserDisplayName()}! Here's your attendance overview.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -262,11 +239,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="pt-1 px-6 pb-4">
             <div className="text-2xl font-bold text-education-navy">
-              {loading ? (
-                <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
-              ) : (
-                totalStudents.toLocaleString()
-              )}
+              {totalStudents.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Enrolled students
