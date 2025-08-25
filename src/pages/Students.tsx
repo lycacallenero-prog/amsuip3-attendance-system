@@ -654,9 +654,11 @@ const Students = () => {
               key={index}
               variant={currentPage === page ? "default" : "outline"}
               size="sm"
-              onClick={() => typeof page === 'number' && {
-                setPagination(prev => ({ ...prev, currentPage: page }));
-                fetchStudents(searchTerm, filters, page);
+              onClick={() => {
+                if (typeof page === 'number') {
+                  setPagination(prev => ({ ...prev, currentPage: page }));
+                  fetchStudents(searchTerm, filters, page);
+                }
               }}
               disabled={typeof page === 'string'}
               className="h-8 min-w-[32px] px-2"
