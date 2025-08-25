@@ -1,12 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Users, BookOpen, TrendingUp, CheckCircle2, BarChart3, Clock, Activity, Target, AlertCircle, Plus, Eye } from "lucide-react";
+import { CalendarDays, Users, BookOpen, TrendingUp, CheckCircle2, BarChart3, Clock, Activity, Target, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Use the same role caching system as navigation
 const getCachedUserRole = (): string | null => {
@@ -83,35 +83,7 @@ const generateMockData = (period: 'daily' | 'weekly' | 'monthly') => {
   }
 };
 
-// Generate pie chart data for attendance distribution
-const generateAttendanceDistribution = () => {
-  const total = 1500;
-  const present = 1410;
-  const absent = 60;
-  const late = 30;
-  
-  return [
-    { name: 'Present', value: present, color: '#10b981' },
-    { name: 'Absent', value: absent, color: '#ef4444' },
-    { name: 'Late', value: late, color: '#f59e0b' }
-  ];
-};
 
-// Generate trend data for attendance over time
-const generateTrendData = () => {
-  return Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    const baseRate = 0.92 + Math.sin(i * 0.2) * 0.05; // Cyclical pattern
-    const attendanceRate = Math.max(0.85, Math.min(0.98, baseRate));
-    
-    return {
-      date: date.toISOString().split('T')[0],
-      rate: Math.round(attendanceRate * 100),
-      students: Math.floor(1500 * attendanceRate)
-    };
-  });
-};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -125,8 +97,6 @@ const Dashboard = () => {
   const isInitialMount = useRef(true);
   const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [chartData, setChartData] = useState<Array<{name: string, present: number, absent: number}>>([]);
-  const [attendanceDistribution, setAttendanceDistribution] = useState<any[]>([]);
-  const [trendData, setTrendData] = useState<any[]>([]);
   const [realTimeStats, setRealTimeStats] = useState({
     todayAttendance: 0,
     todaySessions: 0,
@@ -226,8 +196,6 @@ const Dashboard = () => {
     
     // Initialize chart data
     setChartData(generateMockData(timePeriod));
-    setAttendanceDistribution(generateAttendanceDistribution());
-    setTrendData(generateTrendData());
   }, [user, timePeriod]);
 
   const fetchUserProfile = async () => {
@@ -453,135 +421,7 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      {/* Additional Analytics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-indigo-700">Attendance Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={attendanceDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {attendanceDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value, name) => [`${value} students`, name]}
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      borderRadius: '0.5rem',
-                      border: '1px solid #e5e7eb',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-center space-x-4 mt-2">
-              {attendanceDistribution.map((item, index) => (
-                <div key={index} className="flex items-center text-xs">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-1" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-gray-600">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-teal-700">30-Day Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  />
-                  <YAxis 
-                    domain={[80, 100]}
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip 
-                    formatter={(value) => [`${value}%`, 'Attendance Rate']}
-                    labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      borderRadius: '0.5rem',
-                      border: '1px solid #e5e7eb',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="rate" 
-                    stroke="#0d9488" 
-                    strokeWidth={2}
-                    dot={{ fill: '#0d9488', strokeWidth: 2, r: 3 }}
-                    activeDot={{ r: 5, stroke: '#0d9488', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-rose-700">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => navigate('/take-attendance')}
-                className="w-full bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Take Attendance
-              </Button>
-              <Button 
-                onClick={() => navigate('/students')}
-                variant="outline"
-                className="w-full border-rose-200 text-rose-700 hover:bg-rose-50"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Students
-              </Button>
-              <Button 
-                onClick={() => navigate('/records')}
-                variant="outline"
-                className="w-full border-rose-200 text-rose-700 hover:bg-rose-50"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View Records
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Chart and Recent Sessions Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -594,31 +434,20 @@ const Dashboard = () => {
                   {timePeriod === 'daily' ? 'Daily' : timePeriod === 'weekly' ? 'Weekly' : 'Monthly'} attendance trends
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                  {(['daily', 'weekly', 'monthly'] as const).map((period) => (
-                    <button
-                      key={period}
-                      onClick={() => setTimePeriod(period)}
-                      className={`px-4 py-2 text-sm rounded-md transition-colors font-medium ${
-                        timePeriod === period
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      {period.charAt(0).toUpperCase() + period.slice(1)}
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/records')}
-                  className="h-8 px-3 text-xs"
-                >
-                  <Eye className="h-3 w-3 mr-1" />
-                  View Details
-                </Button>
+              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                {(['daily', 'weekly', 'monthly'] as const).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setTimePeriod(period)}
+                    className={`px-4 py-2 text-sm rounded-md transition-colors font-medium ${
+                      timePeriod === period
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
           </CardHeader>
