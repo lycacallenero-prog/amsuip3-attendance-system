@@ -909,7 +909,7 @@ const Students = () => {
                     <Checkbox
                       checked={selectedStudents.size === students.length && students.length > 0}
                       onCheckedChange={handleSelectAll}
-                      indeterminate={selectedStudents.size > 0 && selectedStudents.size < students.length}
+                      indeterminate={selectedStudents.size > 0 && selectedStudents.size < students.length ? true : undefined}
                     />
                   </th>
                   <th scope="col" className="px-3 py-2 text-left font-medium">Student</th>
